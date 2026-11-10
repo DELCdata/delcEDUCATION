@@ -1,0 +1,1221 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="https://delcdata.github.io/DELCAppsHub/shared-auth.js?v=4"></script>
+<title>delcEDUCATION</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}
+/* Layout: navy app bar + white working cards on a cool gray ground; Sunday-first (one room, one day) with records behind tabs */
+:root{
+  --navy:#1B3254; --navy-2:#26446f; --gold:#C8973A; --delc-green:#84c225; --gold-soft:#f6ecd9;
+  --bg:#eef1f6; --card:#ffffff; --ink:#18233a; --muted:#5d6a82; --line:#dbe1ea; --soft:#f5f7fb;
+  --ok:#1f7a4a; --ok-soft:#e3f4ea; --warn:#a15c00; --warn-soft:#fff2db; --bad:#b4232c; --bad-soft:#fde8ea; --info:#1f4f9c; --info-soft:#e6eefb;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif; --body:"Figtree", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0f1624;--card:#172133;--ink:#e6ebf4;--muted:#9aa7bd;--line:#2a3750;--soft:#1c2840;--gold-soft:#3a2f1a;--ok:#5cc88d;--ok-soft:#173526;--warn:#f0b057;--warn-soft:#3a2b12;--bad:#ff7d86;--bad-soft:#3d1a1f;--info:#8db4ff;--info-soft:#1a2a47;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1624;--card:#172133;--ink:#e6ebf4;--muted:#9aa7bd;--line:#2a3750;--soft:#1c2840;--gold-soft:#3a2f1a;--ok:#5cc88d;--ok-soft:#173526;--warn:#f0b057;--warn-soft:#3a2b12;--bad:#ff7d86;--bad-soft:#3d1a1f;--info:#8db4ff;--info-soft:#1a2a47;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;margin:0}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--navy)}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;letter-spacing:-.01em}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+/* app bar */
+.bar{background:var(--navy);color:#fff;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+.bar .wrap{display:flex;align-items:center;gap:14px;padding-block:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:10px;min-width:0}
+.brand b{font-family:var(--display);font-size:22px;font-weight:800;letter-spacing:-.02em}
+.brand b span{color:var(--delc-green)}
+.brand small{color:#b9c6dc;font-size:12.5px;white-space:nowrap}
+.bar .sp{flex:1}
+.who{display:flex;gap:6px;align-items:center;font-size:12.5px;color:#c9d4e6;flex-wrap:wrap}
+.who select{background:var(--navy-2);border:1px solid #3a5784;color:#fff;border-radius:999px;padding:5px 10px;font-size:13px}
+.tabs{background:var(--navy);border-top:1px solid #2c4870}
+.tabs .wrap{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.tabs button{background:none;border:0;color:#c3cfe2;padding:10px 14px;font-weight:600;font-size:14px;border-bottom:3px solid transparent;white-space:nowrap;cursor:pointer}
+.tabs button.on{color:#fff;border-bottom-color:var(--gold)}
+.tabs button:focus-visible,.btn:focus-visible,.chipbtn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.demo{background:var(--gold-soft);color:var(--ink);font-size:12.5px;text-align:center;padding:6px 12px}
+main{padding-block:18px 60px}
+/* bits */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.between{justify-content:space-between}
+.stack{display:flex;flex-direction:column;gap:12px}
+.muted{color:var(--muted)}.tiny{font-size:12.5px}.small{font-size:13.5px}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 14px;font-weight:600;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.btn:hover{background:var(--soft)}
+.btn.pri{background:var(--navy);border-color:var(--navy);color:#fff}
+.btn.gold{background:var(--gold);border-color:var(--gold);color:#1b1406}
+.btn.sm{padding:5px 10px;font-size:13px;border-radius:8px}
+.btn.ghost{border-color:transparent;background:none}
+.btn.danger{color:var(--bad)}
+.chip{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:700;background:var(--soft);color:var(--muted);white-space:nowrap}
+.chip.ok{background:var(--ok-soft);color:var(--ok)}.chip.warn{background:var(--warn-soft);color:var(--warn)}.chip.bad{background:var(--bad-soft);color:var(--bad)}.chip.info{background:var(--info-soft);color:var(--info)}.chip.gold{background:var(--gold-soft);color:var(--warn)}
+.lbl{font-size:11.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:700}
+.f{display:flex;flex-direction:column;gap:4px;font-size:12.5px;font-weight:700;color:var(--muted);min-width:0}
+.inp,.f input,.f select,.f textarea{width:100%;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:9px 11px;font-weight:500;font-size:14.5px;color:var(--ink)}
+.f textarea{resize:vertical}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media (max-width:640px){.grid2,.grid3{grid-template-columns:1fr}}
+.empty{padding:22px;text-align:center;color:var(--muted)}
+.notice{border-radius:12px;padding:10px 12px;font-size:13.5px;display:flex;gap:8px;align-items:flex-start}
+.notice.warn{background:var(--warn-soft);color:var(--warn)}.notice.bad{background:var(--bad-soft);color:var(--bad)}.notice.ok{background:var(--ok-soft);color:var(--ok)}.notice.info{background:var(--info-soft);color:var(--info)}
+/* day header */
+.day{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.day h1{font-size:26px}
+.stepper{display:flex;align-items:center;border:1px solid var(--line);border-radius:12px;background:var(--card);overflow:hidden}
+.stepper button{border:0;background:none;padding:8px 12px;cursor:pointer;font-weight:700}
+.stepper span{padding:8px 4px;font-weight:700;font-variant-numeric:tabular-nums}
+.rooms{display:flex;gap:6px;flex-wrap:wrap}
+.chipbtn{border:1.5px solid var(--line);background:var(--card);border-radius:999px;padding:6px 14px;font-weight:700;font-size:13.5px;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.chipbtn.on{border-color:var(--navy);background:var(--navy);color:#fff}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none}
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
+.stat b{display:block;font-family:var(--display);font-size:26px;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat.alert{border-color:var(--warn);background:var(--warn-soft)}
+.stat.alert b{color:var(--warn)}
+@media (max-width:640px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.today{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:900px){.today{grid-template-columns:1fr}}
+/* roster */
+.kid{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:10px;align-items:center;padding:9px 4px;border-top:1px solid var(--line)}
+.kid:first-child{border-top:0}
+.av{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-family:var(--display);color:#fff;font-size:15px}
+.kid .nm{font-weight:700}
+.kid .nm button{all:unset;cursor:pointer}
+.kid .nm button:hover{text-decoration:underline}
+.kid.in{background:linear-gradient(90deg,var(--ok-soft),transparent 70%)}
+.kid .sub{font-size:12.5px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.allergy{background:var(--bad-soft);color:var(--bad);font-weight:800}
+.sec{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+.sec h2{font-size:17px}
+.plan{border-top:1px dashed var(--line);margin-top:10px;padding-top:10px}
+.plan dt{font-weight:700;font-size:12.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:8px}
+.plan dd{margin:2px 0 0}
+.adult{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:7px 0;border-top:1px solid var(--line)}
+.adult:first-of-type{border-top:0}
+.signin{border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:grid;gap:8px}.pwrow{display:flex;gap:6px;align-items:center}.pwrow input{flex:1;min-width:0}.modal .err{color:var(--bad);font-size:13px;font-weight:600;min-height:0}
+.issue{border-left:4px solid var(--warn);background:var(--soft);border-radius:8px;padding:8px 10px;margin-top:8px}
+.issue.Injury{border-left-color:var(--bad)}.issue.Resolved{opacity:.75}
+/* tables */
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:8px;border-bottom:1.5px solid var(--line);white-space:nowrap}
+.tbl td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl tr.click{cursor:pointer}.tbl tr.click:hover td{background:var(--soft)}
+.scroll{overflow-x:auto}
+.num,.tbl th.num{text-align:right;font-variant-numeric:tabular-nums}
+@media (max-width:640px){.hide-sm{display:none}}
+/* profile */
+.prof{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+@media (max-width:820px){.prof{grid-template-columns:1fr}}
+.phead{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.phead .av{width:64px;height:64px;font-size:24px}
+.kv{display:grid;grid-template-columns:120px minmax(0,1fr);gap:4px 10px;font-size:14px}
+.kv dt{color:var(--muted);font-weight:600}.kv dd{margin:0}
+.dots{display:flex;gap:4px;flex-wrap:wrap}
+.dots i{width:16px;height:16px;border-radius:4px;background:var(--soft);border:1px solid var(--line);display:block}
+.dots i.y{background:var(--ok);border-color:var(--ok)}
+/* bars */
+.barrow{display:grid;grid-template-columns:150px minmax(0,1fr) 60px;gap:10px;align-items:center;font-size:13.5px;margin-top:6px}
+.track{height:12px;background:var(--soft);border-radius:6px;overflow:hidden}
+.track i{display:block;height:100%;border-radius:6px}
+@media (max-width:640px){.barrow{grid-template-columns:100px minmax(0,1fr) 46px}}
+/* modal */
+.mbg{position:fixed;inset:0;background:rgba(10,18,32,.5);display:flex;align-items:flex-end;justify-content:center;z-index:20;padding:0}
+.modal{background:var(--card);width:100%;max-width:640px;max-height:92vh;overflow:auto;border-radius:18px 18px 0 0;padding:18px;padding-bottom:max(18px,env(safe-area-inset-bottom,0px))}
+@media (min-width:700px){.mbg{align-items:center;padding:20px}.modal{border-radius:18px}}
+.mhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px}
+.mhead h2{font-size:20px}
+.x{border:0;background:var(--soft);width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:18px}
+.toast{position:fixed;left:50%;bottom:max(20px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 16px;border-radius:12px;font-weight:600;z-index:30;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.list-item{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid var(--line)}
+.list-item:first-child{border-top:0}
+textarea.copy{width:100%;min-height:200px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--soft);color:var(--ink)}
+@media (prefers-reduced-motion:no-preference){.kid{transition:background .25s}}
+</style>
+</head>
+<body>
+
+
+<div class="demo">Demo with made-up children and adults. Changes are saved only in this browser. <button class="btn sm ghost" data-act="reset" style="padding:0 6px;text-decoration:underline">Reset demo</button></div>
+<header class="bar"><div class="wrap">
+  <div class="brand"><b>delc<span>EDUCATION</span></b><small>Kid's Korner &amp; Sunday School</small></div>
+  <span class="sp"></span>
+  <label class="who" for="as">Viewing as <select id="as" data-chg="as"></select></label>
+</div></header>
+<nav class="tabs" aria-label="Sections"><div class="wrap" id="tabs"></div></nav>
+<main class="wrap" id="app"></main>
+<div id="modal"></div>
+
+<script>
+/* ======== store ======== */
+const KEY = 'delcedu_demo_v3';
+/* Live hookup: set to {url, key} of the DELC Supabase project. Then the weekly-report kid counts load from att_days
+   and the monthly summary is written to edu_summaries for delcBOARD. Left null, the app runs as a demo. */
+let EDU_LIVE = null;
+const TODAY = (() => { const d = new Date(); return iso(d); })();
+function iso(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function dOf(s) { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); }
+function addDays(s, n) { const d = dOf(s); d.setDate(d.getDate() + n); return iso(d); }
+function lastSunday(s) { const d = dOf(s); d.setDate(d.getDate() - d.getDay()); return iso(d); }
+const uid = () => Math.random().toString(36).slice(2, 10);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const fmt = (s, o) => s ? dOf(s).toLocaleDateString('en-US', o || {month: 'short', day: 'numeric', year: 'numeric'}) : '';
+const t12 = t => { if (!t) return ''; const [h, m] = t.split(':').map(Number); return ((h % 12) || 12) + ':' + String(m).padStart(2, '0') + (h < 12 ? ' AM' : ' PM'); };
+const nowT = () => { const d = new Date(); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+const ageOf = dob => { if (!dob) return ''; const b = dOf(dob), n = dOf(TODAY); let a = n.getFullYear() - b.getFullYear(); if (n < new Date(n.getFullYear(), b.getMonth(), b.getDate())) a--; return a; };
+const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+
+function seed() {
+  const rooms = [
+    {id: 'kk', name: "Kid's Korner", ages: 'Ages 3–5', color: '#C8973A', place: 'Kids Korner - Nursery/Pre-K'},
+    {id: 'cc', name: "Children's Room", ages: 'K – 2nd grade', color: '#2F80ED', place: 'Kids Korner - Elementary'},
+    {id: 'ss', name: 'Sunday School', ages: '3rd – 6th grade', color: '#1a6e3c', place: 'Kids Korner - Elementary'},
+    {id: 'yg', name: 'Youth Group', ages: '7th – 12th grade', color: '#7e3a8a', place: 'Kids Korner - Youth'},
+    {id: 'jam', name: 'JAM', ages: 'K – 6th grade', color: '#d9534f', place: 'JAM Room', meets: {mode: 'nth', day: 3, weeks: [2, 4], time: '6:30 PM', dates: []}}
+  ];
+  const by = (y, m, d) => iso(new Date(y, m - 1, d));
+  const K = (first, last, dob, room, gName, gPhone, extra) => ({id: 'k' + uid(), first, last, dob, room_id: room, grade: '', guardians: [{name: gName, rel: 'Parent', phone: gPhone, email: ''}], pickups: [{name: gName, rel: 'Parent', phone: gPhone}], allergies: '', medical: '', photo_ok: true, notes: '', active: true, visitor: false, joined: '2025-09-07', ...(extra || {})});
+  const students = [
+    K('Avery', 'Sample', by(2021, 4, 12), 'kk', 'Jordan Sample', '814-555-0101', {allergies: 'Peanuts — EpiPen in office', pickups: [{name: 'Jordan Sample', rel: 'Parent', phone: '814-555-0101'}, {name: 'Pat Sample', rel: 'Grandparent', phone: '814-555-0102'}]}),
+    K('Milo', 'Example', by(2022, 1, 30), 'kk', 'Casey Example', '814-555-0103'),
+    K('Nora', 'Placeholder', by(2021, 9, 3), 'kk', 'Riley Placeholder', '814-555-0104', {photo_ok: false}),
+    K('Theo', 'Demo', by(2020, 11, 21), 'kk', 'Morgan Demo', '814-555-0105'),
+    K('Ivy', 'Testwell', by(2022, 6, 14), 'kk', 'Drew Testwell', '814-555-0106', {medical: 'Asthma — inhaler in bag'}),
+    K('Leo', 'Sampleton', by(2019, 2, 8), 'cc', 'Sam Sampleton', '814-555-0107'),
+    K('Ruby', 'Fakename', by(2018, 7, 19), 'cc', 'Alex Fakename', '814-555-0108', {allergies: 'Dairy'}),
+    K('Owen', 'Mockley', by(2019, 10, 1), 'cc', 'Jamie Mockley', '814-555-0109'),
+    K('Hazel', 'Examplar', by(2018, 3, 27), 'cc', 'Taylor Examplar', '814-555-0110'),
+    K('Finn', 'Notreal', by(2019, 5, 5), 'cc', 'Quinn Notreal', '814-555-0111'),
+    K('Clara', 'Pretend', by(2018, 12, 12), 'cc', 'Rowan Pretend', '814-555-0112'),
+    K('Eli', 'Specimen', by(2016, 8, 22), 'ss', 'Blake Specimen', '814-555-0113'),
+    K('Maya', 'Template', by(2015, 4, 2), 'ss', 'Cameron Template', '814-555-0114', {allergies: 'Bee stings'}),
+    K('Jack', 'Standin', by(2016, 1, 17), 'ss', 'Devon Standin', '814-555-0115'),
+    K('Lucy', 'Dummy', by(2014, 11, 9), 'ss', 'Emerson Dummy', '814-555-0116'),
+    K('Sam', 'Fictional', by(2015, 6, 30), 'ss', 'Finley Fictional', '814-555-0117'),
+    K('Grace', 'Imagined', by(2016, 9, 13), 'ss', 'Harper Imagined', '814-555-0118'),
+    K('Noah', 'Madeup', by(2012, 2, 25), 'yg', 'Hayden Madeup', '814-555-0119'),
+    K('Ella', 'Invented', by(2011, 7, 7), 'yg', 'Jesse Invented', '814-555-0120'),
+    K('Caleb', 'Mockup', by(2010, 10, 18), 'yg', 'Kendall Mockup', '814-555-0121'),
+    K('Zoe', 'Prototype', by(2012, 5, 29), 'yg', 'Logan Prototype', '814-555-0122')
+  ];
+  students.forEach(s => { const a = ageOf(s.dob); s.grade = a <= 5 ? 'Pre-K' : a === 6 ? 'K' : (a - 5) + (a - 5 === 1 ? 'st' : a - 5 === 2 ? 'nd' : a - 5 === 3 ? 'rd' : 'th'); });
+  const yrs = n => addDays(TODAY, -Math.round(n * 365));
+  const A = (name, role, rooms, ca, po, fb, tr) => ({id: 'a' + uid(), name, role, rooms, phone: '814-555-01' + String(30 + Math.floor(Math.random() * 60)), email: '', clearances: {child_abuse: ca, police: po, fbi: fb}, training: tr, training_exp: tr ? addDays(tr, 365 * 3) : ''});
+  const adults = [
+    A('Erin Peterman', 'Director', ['kk', 'cc', 'ss', 'yg'], yrs(1.2), yrs(1.2), yrs(1.2), yrs(.6)),
+    A('Sample Teacher One', 'Room leader', ['kk'], yrs(2), yrs(2), yrs(2), yrs(.8)),
+    A('Sample Helper Two', 'Helper', ['kk'], yrs(4.9), yrs(4.9), yrs(4.9), yrs(1.5)),
+    A('Sample Teacher Three', 'Room leader', ['cc'], yrs(.5), yrs(.5), yrs(.5), yrs(.5)),
+    A('Sample Helper Four', 'Helper', ['cc', 'ss'], yrs(4.85), yrs(4.85), yrs(4.85), yrs(2)),
+    A('Sample Teacher Five', 'Room leader', ['ss'], yrs(3), yrs(3), yrs(3), yrs(1)),
+    A('Sample Youth Leader', 'Room leader', ['yg'], yrs(1), yrs(1), yrs(1), yrs(1)),
+    A('Sample New Volunteer', 'Helper', ['yg'], yrs(.05), yrs(.05), yrs(.05), ''),
+    A('Derek Detrich', 'Room leader', ['jam'], yrs(1), yrs(1), yrs(1), yrs(.5))
+  ];
+  const lessons = {kk: ['God made everything', 'Noah and the big boat', 'Jesus loves the little children', 'David and Goliath', 'The lost sheep', 'Thank you, God (harvest)', 'Jonah and the fish', 'Baby Moses in the basket'],
+    cc: ['Creation: seven days', 'Noah trusts God', 'Abraham’s big family', 'Joseph’s colorful coat', 'The Good Samaritan', 'Giving thanks', 'Jesus calms the storm', 'Zacchaeus climbs a tree'],
+    ss: ['The books of the Bible', 'Covenant with Noah', 'Abraham and faith', 'Joseph forgives', 'Who is my neighbor?', 'Gratitude journal', 'Peace in the storm', 'Saints and heroes of faith'],
+    yg: ['What is grace?', 'Promises we keep', 'Faith under pressure', 'Forgiveness is hard', 'Serving our town', 'Stewardship 101', 'Anxiety and prayer', 'All Saints: whose faith shaped yours?']};
+  const sessions = []; let sd = lastSunday(TODAY);
+  students.filter(k => ['cc', 'ss'].includes(k.room_id)).slice(0, 8).forEach(k => { k.also = ['jam']; });
+  const jamKids = students.filter(k => (k.also || []).includes('jam')); const jamT = ['God’s big story', 'Joseph and his brothers', 'Moses and the burning bush', 'Ruth stays with Naomi', 'Daniel and the lions'];
+  for (let i = 70, j = 0; i >= 1; i--) { const dt = new Date(); dt.setDate(dt.getDate() - i); const nth = Math.floor((dt.getDate() - 1) / 7) + 1; if (dt.getDay() !== 3 || ![2, 4].includes(nth)) continue; const date = iso(dt); const att = {}; jamKids.forEach((k, n) => { if ((n + j) % 4 !== 0) att[k.id] = {in: '18:2' + (n % 10), by: k.guardians[0].name, out: '19:4' + (n % 10), to: k.pickups[0].name}; }); const title = jamT[j % jamT.length]; j++;
+    sessions.push({id: 's' + uid(), date, room_id: 'jam', lesson: {title, scripture: '', summary: `Games, songs and the story of “${title}”.`}, plan: null, att, adults: [], visitors: []}); }
+  for (let w = 7; w >= 0; w--) {
+    const date = addDays(sd, -7 * w);
+    rooms.filter(r => !r.meets).forEach(r => {
+      const kids = students.filter(s => s.room_id === r.id); const att = {};
+      let seedN = r.id.charCodeAt(0) * 31 + w * 17; const rnd = () => { seedN = (seedN * 9301 + 49297) % 233280; return seedN / 233280; }; const rate = .55 + rnd() * .4;
+      kids.forEach((k, i) => { if (rnd() < rate) att[k.id] = {in: '09:4' + (i % 10), by: k.guardians[0].name, out: w === 0 ? '' : '11:0' + (i % 10), to: w === 0 ? '' : k.pickups[0].name}; });
+      const ad = adults.filter(a => a.rooms.includes(r.id) && a.role !== 'Director').map(a => a.id);
+      const title = lessons[r.id][7 - w];
+      sessions.push({id: 's' + uid(), date, room_id: r.id, lesson: {title, scripture: '', summary: `We talked about “${title}” and how it shows God’s love for us.`}, plan: w <= 1 ? {objectives: 'Kids can retell the story and name one way God cares for them.', opening: 'Welcome song and prayer circle', activities: 'Story time with picture cards; act it out together', craft: 'Paper craft tied to the story', closing: 'Prayer and take-home sheet', materials: 'Picture cards, crayons, glue sticks, take-home sheets', notes: ''} : null, att, adults: w === 0 && r.id === 'yg' ? ad.slice(0, 1) : ad, visitors: []});
+    });
+  }
+  const s0 = sessions.find(s => s.room_id === 'kk' && s.date === addDays(sd, -14)), s1 = sessions.find(s => s.room_id === 'cc' && s.date === addDays(sd, -7));
+  const issues = [
+    {id: 'i' + uid(), date: s0.date, room_id: 'kk', type: 'Injury', student_ids: [students[1].id], description: 'Tripped on the rug corner during story time and scraped a knee.', action: 'Cleaned and bandaged. Rug corner taped down.', parent_notified: true, notified_at: '10:35', followup: 'Ask Facilities to replace the rug.', status: 'Resolved', by: 'Sample Teacher One'},
+    {id: 'i' + uid(), date: s1.date, room_id: 'cc', type: 'Facility / supplies', student_ids: [], description: 'Out of glue sticks and the CD player stopped working.', action: 'Borrowed from Sunday School room.', parent_notified: false, followup: 'Order glue sticks; replace CD player.', status: 'Open', by: 'Sample Teacher Three'},
+    {id: 'i' + uid(), date: sd, room_id: 'yg', type: 'Supervision', student_ids: [], description: 'Only one adult in the room for the first 20 minutes.', action: 'Moved the group to the open fellowship area until a second adult arrived.', parent_notified: false, followup: 'Add a second youth volunteer to the schedule.', status: 'Open', by: 'Sample Youth Leader'}
+  ];
+  const schedule = []; const byName = n => adults.find(a => a.name === n).id;
+  for (let w = 1; w <= 10; w++) { const date = addDays(sd, 7 * w); rooms.filter(r => !r.meets).forEach(r => { let ad = adults.filter(a => a.rooms.includes(r.id) && a.role !== 'Director').map(a => a.id);
+    if (r.id === 'cc' && w === 2) ad = ad.filter(id => id !== byName('Sample Teacher Three'));
+    if (r.id === 'ss' && w === 4) ad = ad.filter(id => id !== byName('Sample Teacher Five'));
+    const row = {date, room_id: r.id, adults: ad, merge_into: null, cancelled: false, note: ''};
+    if (r.id === 'ss' && w === 4) { row.merge_into = 'yg'; row.adults = []; row.note = 'Teacher away — combined with Youth Group, shared lesson.'; }
+    if (w === 9 && r.id !== 'kk') { row.cancelled = true; row.adults = []; row.note = 'Christmas program rehearsal'; }
+    schedule.push(row); }); }
+  const church = {}; [...new Set(sessions.map(x => x.date))].forEach((d, i) => { const inClass = sessions.filter(x => x.date === d).reduce((n, x) => n + Object.values(x.att).filter(a => a.in).length, 0); church[d] = inClass + 2 + ((i * 5 + 3) % 6); });
+  return {rooms, students, adults, sessions, issues, schedule, church, v: 3};
+}
+let DB; let MEMORY = null;
+function load() { try { const s = localStorage.getItem(KEY); if (s) return JSON.parse(s); } catch (_) {} return MEMORY || seed(); }
+let sendT; var persist; persist = function () { MEMORY = DB; try { localStorage.setItem(KEY, JSON.stringify(DB)); } catch (_) {} if (EDU_LIVE) { clearTimeout(sendT); sendT = setTimeout(() => sendSummary(TODAY.slice(0, 7), true), 4000); } }
+DB = load(); if (!DB.church) DB.church = seed().church; if (!DB.schedule) { const fresh = seed(); DB.schedule = fresh.schedule.map(x => ({...x, adults: []})); }
+
+/* ======== state ======== */
+function isDirectorDefault() { try { const p = JSON.parse(localStorage.getItem('delcedu_demo_v3_ui') || '{}'); return !p.as || p.as === 'director'; } catch (_) { return true; } }
+const S = {calFrom: lastSunday(TODAY), tab: isDirectorDefault() ? 'dash' : 'today', date: lastSunday(TODAY), room: 'kk', as: 'director', q: '', student: null, modal: null, monthOf: TODAY.slice(0, 7), roomF: 'all'};
+try { const p = JSON.parse(localStorage.getItem(KEY + '_ui') || '{}'); Object.assign(S, {tab: p.tab || S.tab, room: p.room || S.room, as: p.as || S.as}); } catch (_) {}
+const saveUi = () => { try { localStorage.setItem(KEY + '_ui', JSON.stringify({tab: S.tab, room: S.room, as: S.as})); } catch (_) {} };
+const isDirector = () => S.as === 'director';
+const meAdult = () => isDirector() ? DB.adults.find(a => a.role === 'Director') : DB.adults.find(a => a.id === S.as);
+const myRooms = () => isDirector() ? DB.rooms : DB.rooms.filter(r => (meAdult() || {rooms: []}).rooms.includes(r.id));
+/* Coverage rule (Derek, 2026-11-09): a class is covered when a cleared head teacher (Room leader, or the Director when she teaches) is scheduled */
+const isHead = a => !!a && (a.role === 'Room leader' || a.role === 'Director');
+const roleName = r => r === 'Room leader' ? 'Head teacher' : r;
+const headOk = ids => (ids || []).map(adult).some(a => a && isHead(a) && adultCleared(a));
+const room = id => DB.rooms.find(r => r.id === id) || (DB.oldrooms || []).find(r => r.id === id) || {name: '?', color: '#888'};
+const kid = id => DB.students.find(s => s.id === id);
+const adult = id => DB.adults.find(a => a.id === id);
+const kname = k => k ? k.first + ' ' + k.last : '';
+const session = (date, rid) => DB.sessions.find(s => s.date === date && s.room_id === rid);
+function ensureSession(date, rid) { let s = session(date, rid); if (!s) { s = {id: 's' + uid(), date, room_id: rid, lesson: {title: '', scripture: '', summary: ''}, plan: null, att: {}, adults: [], visitors: []}; DB.sessions.push(s); } return s; }
+const initials = k => ((k.first || '?')[0] + (k.last || '')[0]).toUpperCase();
+/* PA clearances: renew every 5 years */
+function clearState(dt) { if (!dt) return {cls: 'bad', txt: 'Missing'}; const exp = addDays(dt, 365 * 5); const days = (dOf(exp) - dOf(TODAY)) / 864e5; if (days < 0) return {cls: 'bad', txt: 'Expired ' + fmt(exp)}; if (days < 90) return {cls: 'warn', txt: 'Renew by ' + fmt(exp)}; return {cls: 'ok', txt: 'Good to ' + fmt(exp, {month: 'short', year: 'numeric'})}; }
+/* Teachers need two things (Derek, 2026-11-09): a PA Child Abuse Clearance (issued date, good 5 years) and Mandated Reporter Training (expiration date entered) */
+function trainState(a) { const dt = a && a.training_exp; if (!dt) return {cls: 'bad', txt: 'Missing'}; const days = (dOf(dt) - dOf(TODAY)) / 864e5; if (days < 0) return {cls: 'bad', txt: 'Expired ' + fmt(dt)}; if (days < 90) return {cls: 'warn', txt: 'Renew by ' + fmt(dt)}; return {cls: 'ok', txt: 'Good to ' + fmt(dt, {month: 'short', year: 'numeric'})}; }
+const adultCleared = a => clearState(a.clearances.child_abuse).cls !== 'bad' && trainState(a).cls !== 'bad';
+const adultWorst = a => { const L = [clearState(a.clearances.child_abuse).cls, trainState(a).cls]; return L.includes('bad') ? 'bad' : L.includes('warn') ? 'warn' : 'ok'; };
+
+/* ======== render ======== */
+function renderWho() {
+  const opts = [['director', 'Erin Peterman — Christian Ed Director'], ...DB.adults.filter(a => a.role === 'Room leader').map(a => [a.id, a.name + ' — ' + a.rooms.map(r => room(r).name).join(', ')])];
+  if (!opts.some(o => o[0] === S.as)) S.as = 'director';
+  $('#as').innerHTML = opts.map(([v, l]) => `<option value="${v}" ${v === S.as ? 'selected' : ''}>${esc(l)}</option>`).join('');
+}
+function renderTabs() {
+  const T = [...(isDirector() ? [['dash', 'Dashboard']] : []), ['today', 'Sunday'], ['cal', isDirector() ? 'Sunday calendar' : 'My schedule'], ['students', isDirector() ? 'Student profiles' : 'My students'], ['adults', 'Adults & clearances'], ['lessons', 'Lessons'], ['issues', 'Issues'], ...(isDirector() ? [['report', 'Monthly report'], ['rooms', 'Classes']] : [])];
+  if (!T.some(t => t[0] === S.tab)) S.tab = isDirector() ? 'dash' : 'today';
+  const openIss = visibleIssues().filter(i => i.status === 'Open').length;
+  $('#tabs').innerHTML = T.map(([k, l]) => `<button class="${S.tab === k ? 'on' : ''}" data-act="tab" data-v="${k}">${l}${k === 'issues' && openIss ? ` <span class="chip warn" style="margin-left:4px">${openIss}</span>` : ''}</button>`).join('');
+}
+function render() {
+  renderWho(); renderTabs(); const R = myRooms(); if (!R.some(r => r.id === S.room) && R[0]) S.room = R[0].id;
+  const v = S.student ? viewProfile(kid(S.student)) : S.tab === 'dash' ? viewDash() : S.tab === 'cal' ? viewCal() : S.tab === 'today' ? viewToday() : S.tab === 'students' ? viewStudents() : S.tab === 'adults' ? viewAdults() : S.tab === 'lessons' ? viewLessons() : S.tab === 'issues' ? viewIssues() : S.tab === 'report' ? viewReport() : viewRooms();
+  $('#app').innerHTML = v; saveUi(); renderModal();
+}
+var roomChips = (sel, act, all) => `<div class="rooms">${all ? `<button class="chipbtn ${sel === 'all' ? 'on' : ''}" data-act="${act}" data-v="all">All rooms</button>` : ''}${myRooms().map(r => `<button class="chipbtn ${sel === r.id ? 'on' : ''}" data-act="${act}" data-v="${r.id}"><span class="dot" style="background:${r.color}"></span>${esc(r.name)}</button>`).join('')}</div>`;
+
+/* ---- Sunday ---- */
+function viewToday() {
+  const r = room(S.room); const s = session(S.date, S.room) || {lesson: {}, att: {}, adults: [], visitors: [], plan: null};
+  const pl = planFor(S.date, S.room); const mergedIn = DB.rooms.filter(x => x.id !== S.room && planFor(S.date, x.id).merge_into === S.room); const roomIds = [S.room, ...mergedIn.map(x => x.id)];
+  const kids = DB.students.filter(k => k.active !== false && (roomIds.includes(k.room_id) || roomIds.some(id => (k.also || []).includes(id)) || (s.visitors || []).includes(k.id))).sort((a, b) => a.first.localeCompare(b.first));
+  const inKids = kids.filter(k => s.att[k.id] && s.att[k.id].in && !s.att[k.id].out);
+  const present = kids.filter(k => s.att[k.id] && s.att[k.id].in);
+  const ads = (s.adults || []).map(adult).filter(Boolean); const cleared = ads.filter(adultCleared);
+  const alertsHere = present.filter(k => k.allergies || k.medical);
+  const isPast = S.date < lastSunday(TODAY);
+  const iss = DB.issues.filter(i => i.date === S.date && i.room_id === S.room);
+  const stepper = `<div class="stepper"><button data-act="day" data-v="-7" aria-label="Previous Sunday">‹</button><span>${fmt(S.date, {weekday: 'short', month: 'short', day: 'numeric'})}</span><button data-act="day" data-v="7" aria-label="Next Sunday">›</button></div>`;
+  const supervision = present.length && !headOk(s.adults) ? `<div class="notice bad" style="margin-bottom:12px">⚠️ <div><b>No head teacher:</b> no head teacher with a current clearance and training is signed into this room. Sign one in, or merge this class with another room.</div></div>` : '';
+  const kidRow = k => { const a = s.att[k.id] || {}; const st = a.in ? (a.out ? 'out' : 'in') : '';
+    return `<div class="kid ${st === 'in' ? 'in' : ''}"><div class="av" style="background:${room(k.room_id).color}">${esc(initials(k))}</div>
+      <div style="min-width:0"><div class="nm"><button data-act="profile" data-id="${k.id}">${esc(kname(k))}</button>${k.room_id !== S.room ? ` <span class="chip" style="color:${room(k.room_id).color}">from ${esc(room(k.room_id).name)}</span>` : ''}${(s.visitors || []).includes(k.id) || k.visitor ? ' <span class="chip info">Visitor</span>' : ''}</div>
+      <div class="sub">${k.grade ? esc(k.grade) + ' · ' : ''}age ${ageOf(k.dob)}${k.allergies ? ` <span class="chip allergy" title="${esc(k.allergies)}">⚠ ${esc(k.allergies.split('—')[0].trim())}</span>` : ''}${k.medical ? ` <span class="chip warn" title="${esc(k.medical)}">⚕ ${esc(k.medical.split('—')[0].trim())}</span>` : ''}${k.photo_ok === false ? ' <span class="chip">No photos</span>' : ''}${a.in ? `<span>In ${t12(a.in)}${a.by ? ' · by ' + esc(a.by) : ''}</span>` : ''}${a.out ? `<span>Out ${t12(a.out)} · to ${esc(a.to)}</span>` : ''}</div></div>
+      <div>${!a.in ? `<button class="btn sm pri" data-act="checkin" data-id="${k.id}">Check in</button>` : !a.out ? `<button class="btn sm" data-act="checkout" data-id="${k.id}">Check out</button>` : `<button class="btn sm ghost" data-act="undo" data-id="${k.id}" title="Undo check-out">↺</button>`}</div></div>`; };
+  const P = s.plan;
+  return `<div class="day"><h1>${esc(r.name)}</h1><span class="muted">${esc(r.ages)}</span><span style="flex:1"></span>${stepper}</div>
+    <div style="margin-bottom:14px">${roomChips(S.room, 'room')}</div>
+    ${pl.merge_into ? `<div class="notice warn" style="margin-bottom:12px">🔀 <div><b>Merged today:</b> ${esc(r.name)} meets with <b>${esc(room(pl.merge_into).name)}</b>.${pl.note ? ' ' + esc(pl.note) : ''} <button class="btn sm" data-act="room" data-v="${pl.merge_into}" style="margin-left:6px">Go to ${esc(room(pl.merge_into).name)}</button></div></div>` : ''}
+    ${pl.cancelled ? `<div class="notice bad" style="margin-bottom:12px">✕ <div><b>No class today.</b>${pl.note ? ' ' + esc(pl.note) : ''}</div></div>` : ''}
+    ${mergedIn.length ? `<div class="notice info" style="margin-bottom:12px">🔀 <div>${mergedIn.map(x => `<b>${esc(x.name)}</b>`).join(' and ')} ${mergedIn.length === 1 ? 'is' : 'are'} meeting with you today — those children are on your list.</div></div>` : ''}
+    ${!ads.length && pl.adults.length && !pl.merge_into ? `<div class="notice info" style="margin-bottom:12px">🗓 <div>Scheduled today: <b>${pl.adults.map(id => esc((adult(id) || {}).name || '')).join(', ')}</b> <button class="btn sm" data-act="signSched" style="margin-left:6px">Sign them in</button></div></div>` : ''}
+    ${isPast ? `<div class="notice info" style="margin-bottom:12px">You’re looking at a past Sunday. Changes still save to that day’s record.</div>` : ''}
+    <div class="stats"><div class="stat"><span class="lbl">In the room</span><b>${inKids.length}</b><span class="tiny muted">${present.length} came today</span></div>
+      <div class="stat"><span class="lbl">Adults</span><b>${ads.length}</b><span class="tiny muted">${cleared.length} cleared</span></div>
+      <div class="stat ${alertsHere.length ? 'alert' : ''}"><span class="lbl">Allergy / medical</span><b>${alertsHere.length}</b><span class="tiny muted">${alertsHere.length ? alertsHere.map(k => esc(k.first)).join(', ') : 'none present'}</span></div>
+      <div class="stat"><span class="lbl">Issues today</span><b>${iss.length}</b><span class="tiny muted">${iss.filter(i => i.status === 'Open').length} open</span></div></div>
+    ${supervision}
+    <div class="today">
+      <section class="card" aria-label="Attendance"><div class="sec"><h2>Attendance</h2><div class="row"><button class="btn sm" data-act="allin">Check in all</button><button class="btn sm gold" data-act="visitor">+ Visitor</button></div></div>
+        ${kids.length ? kids.map(kidRow).join('') : '<div class="empty">No students in this room yet.</div>'}</section>
+      <div class="stack">
+        <section class="card" aria-label="Lesson"><div class="sec"><h2>Today’s lesson</h2><button class="btn sm" data-act="lessonEdit">${s.lesson && s.lesson.title ? 'Edit' : '+ Add lesson'}</button></div>
+          ${s.lesson && s.lesson.title ? `<div style="font-weight:700;font-size:16px">${esc(s.lesson.title)}</div>${s.lesson.scripture ? `<div class="tiny muted">📖 ${esc(s.lesson.scripture)}</div>` : ''}<p style="margin:6px 0 0">${esc(s.lesson.summary || '')}</p>` : '<div class="muted small">A short description of what you taught. It goes into the monthly report.</div>'}
+          ${P ? `<details class="plan"><summary style="cursor:pointer;font-weight:700">📝 Lesson plan</summary><dl>${[['objectives', 'Goal'], ['opening', 'Opening'], ['activities', 'Activities'], ['craft', 'Craft / game'], ['closing', 'Closing'], ['materials', 'Materials'], ['notes', 'Notes']].filter(([k]) => P[k]).map(([k, l]) => `<dt>${l}</dt><dd>${esc(P[k])}</dd>`).join('')}</dl></details>` : `<div class="plan tiny muted">No lesson plan. <button class="btn sm ghost" data-act="planEdit" style="padding:0 4px;text-decoration:underline">Write one</button> (optional)</div>`}
+          ${P ? '<div style="margin-top:8px"><button class="btn sm" data-act="planEdit">Edit lesson plan</button></div>' : ''}</section>
+        <section class="card" aria-label="Adults in the room"><div class="sec"><h2>Adults in the room</h2><button class="btn sm" data-act="adultAdd">+ Add adult</button></div>
+          ${ads.map(a => { const w = adultWorst(a); return `<div class="adult"><div><b>${esc(a.name)}</b><div class="tiny muted">${esc(roleName(a.role))}</div></div><div class="row"><span class="chip ${w}">${w === 'ok' ? '✓ Clearance & training current' : w === 'warn' ? 'Renewal due soon' : '✕ Clearance or training missing'}</span><button class="btn sm ghost" data-act="adultRm" data-id="${a.id}" aria-label="Remove ${esc(a.name)}">×</button></div></div>`; }).join('') || '<div class="muted small">No adults signed in yet.</div>'}</section>
+        <section class="card" aria-label="Issues"><div class="sec"><h2>Issues</h2><button class="btn sm gold" data-act="issueNew">+ Log an issue</button></div>
+          ${iss.map(issueCard).join('') || '<div class="muted small">Nothing logged. Use this for injuries, behavior, health, supervision or supplies — it goes only to the director.</div>'}</section>
+      </div></div>`;
+}
+const issueCard = i => `<div class="issue ${esc(i.type.split(' ')[0])} ${i.status}"><div class="row between"><b>${esc(i.type)}</b><span class="chip ${i.status === 'Open' ? 'warn' : 'ok'}">${i.status}</span></div><div class="small">${esc(i.description)}</div>${i.action ? `<div class="tiny"><b>Done:</b> ${esc(i.action)}</div>` : ''}<div class="tiny muted">${esc(room(i.room_id).name)} · ${fmt(i.date)} · ${esc(i.by || '')}${(i.student_ids || []).length ? ' · ' + i.student_ids.map(id => esc(kname(kid(id)))).join(', ') : ''}${i.parent_notified ? ' · parent told' + (i.notified_at ? ' ' + t12(i.notified_at) : '') : ''}</div>${isDirector() ? `<div style="margin-top:6px"><button class="btn sm" data-act="issueEdit" data-id="${i.id}">Open</button></div>` : ''}</div>`;
+
+/* ---- students ---- */
+function viewStudents() {
+  const q = S.q.toLowerCase(); const dir = isDirector();
+  const L = DB.students.filter(k => (dir || myRooms().some(r => r.id === k.room_id || (k.also || []).includes(r.id))) && (S.roomF === 'all' || k.room_id === S.roomF || (k.also || []).includes(S.roomF)) && (!q || (kname(k) + ' ' + k.guardians.map(g => g.name).join(' ')).toLowerCase().includes(q))).sort((a, b) => a.last.localeCompare(b.last) || a.first.localeCompare(b.first));
+  const rows = L.map(k => { const st = stats(k); return `<tr class="click" data-act="profile" data-id="${k.id}"><td><div class="row" style="gap:8px;flex-wrap:nowrap"><div class="av" style="width:32px;height:32px;font-size:12.5px;background:${room(k.room_id).color}">${esc(initials(k))}</div><div><b>${esc(kname(k))}</b>${k.active === false ? ' <span class="chip">Inactive</span>' : ''}${k.visitor ? ' <span class="chip info">Visitor</span>' : ''}<div class="tiny muted">${esc(k.grade || '')} · age ${ageOf(k.dob)}</div></div></div></td><td class="hide-sm">${esc(room(k.room_id).name)}</td><td class="hide-sm">${esc(k.guardians.map(g => g.name).join(', '))}</td><td>${k.allergies ? `<span class="chip allergy">⚠ ${esc(k.allergies.split('—')[0].trim())}</span>` : ''}${k.medical ? ` <span class="chip warn">⚕</span>` : ''}</td><td class="num">${st.n}<span class="tiny muted"> / ${st.of}</span></td><td class="hide-sm tiny muted">${st.last ? fmt(st.last, {month: 'short', day: 'numeric'}) : '—'}</td></tr>`; }).join('');
+  return `<div class="day"><h1>${dir ? 'Student profiles' : 'My students'}</h1><span class="muted">${L.length} shown</span><span style="flex:1"></span>${dir ? '<button class="btn gold" data-act="studentNew">+ Add a student</button>' : ''}</div>
+    <div class="row" style="margin-bottom:12px"><input class="inp" id="q" data-inp="q" placeholder="Search by child or parent name" value="${esc(S.q)}" style="max-width:320px">${roomChips(S.roomF, 'roomF', true)}</div>
+    ${!dir ? '<div class="notice info" style="margin-bottom:12px">You see the children in your rooms. Full profiles, health notes and history are kept by the Christian Ed Director.</div>' : ''}
+    <div class="card scroll" style="padding:6px 10px"><table class="tbl"><thead><tr><th>Student</th><th class="hide-sm">Room</th><th class="hide-sm">Parents / guardians</th><th>Alerts</th><th class="num">Sundays</th><th class="hide-sm">Last here</th></tr></thead><tbody>${rows || '<tr><td colspan="6" class="empty">No students match.</td></tr>'}</tbody></table></div>
+    <div class="tiny muted" style="margin-top:8px">“Sundays” counts the last 8 weeks of class.</div>`;
+}
+function stats(k) { const S8 = DB.sessions.filter(s => s.room_id === k.room_id || (s.att[k.id])); const dates = [...new Set(DB.sessions.filter(s => s.room_id === k.room_id).map(s => s.date))]; const here = DB.sessions.filter(s => s.att[k.id] && s.att[k.id].in).map(s => s.date).sort(); return {n: new Set(here).size, of: dates.length, last: here[here.length - 1], dates: dates.sort(), here: new Set(here)}; }
+function viewProfile(k) {
+  if (!k) { S.student = null; return viewStudents(); }
+  const dir = isDirector(); const r = room(k.room_id); const st = stats(k);
+  const lessons = DB.sessions.filter(s => s.att[k.id] && s.att[k.id].in && s.lesson && s.lesson.title).sort((a, b) => b.date.localeCompare(a.date));
+  const iss = DB.issues.filter(i => (i.student_ids || []).includes(k.id)).sort((a, b) => b.date.localeCompare(a.date));
+  const pct = st.of ? Math.round(st.n / st.of * 100) : 0;
+  return `<div style="margin-bottom:12px"><button class="btn sm ghost" data-act="back">← ${dir ? 'All students' : 'My students'}</button></div>
+    <div class="card" style="margin-bottom:14px"><div class="phead"><div class="av" style="background:${r.color}">${esc(initials(k))}</div><div style="flex:1;min-width:0"><h1 style="font-size:26px">${esc(kname(k))}</h1><div class="muted">${esc(r.name)} · ${esc(k.grade || '')} · age ${ageOf(k.dob)}${k.dob ? ' · born ' + fmt(k.dob) : ''}</div>
+      <div class="row" style="margin-top:6px;gap:6px">${k.allergies ? `<span class="chip allergy">⚠ Allergy: ${esc(k.allergies)}</span>` : '<span class="chip ok">No allergies listed</span>'}${k.medical ? `<span class="chip warn">⚕ ${esc(k.medical)}</span>` : ''}${k.photo_ok === false ? '<span class="chip">No photos</span>' : '<span class="chip">Photos OK</span>'}${k.active === false ? '<span class="chip">Inactive</span>' : ''}</div></div>
+      ${dir ? `<button class="btn" data-act="studentEdit" data-id="${k.id}">Edit profile</button>` : ''}</div></div>
+    <div class="prof">
+      <section class="card"><div class="sec"><h2>Family &amp; pickup</h2></div>
+        <div class="lbl" style="margin-bottom:4px">Parents / guardians</div>${k.guardians.map(g => `<div class="list-item"><div><b>${esc(g.name)}</b> <span class="tiny muted">${esc(g.rel || '')}</span></div><div class="tiny" style="user-select:all">${esc(g.phone || '')}${g.email ? ' · ' + esc(g.email) : ''}</div></div>`).join('')}
+        <div class="lbl" style="margin:12px 0 4px">Allowed to pick up</div>${(k.pickups || []).map(g => `<div class="list-item"><div><b>${esc(g.name)}</b> <span class="tiny muted">${esc(g.rel || '')}</span></div><div class="tiny">${esc(g.phone || '')}</div></div>`).join('') || '<div class="small muted">No one listed — only a parent or guardian.</div>'}</section>
+      <section class="card"><div class="sec"><h2>Attendance</h2><span class="chip ${pct >= 75 ? 'ok' : pct >= 50 ? 'info' : 'warn'}">${pct}% of Sundays</span></div>
+        <div class="small" style="margin-bottom:8px">${st.n} of the last ${st.of} Sundays${st.last ? ' · last here ' + fmt(st.last, {month: 'long', day: 'numeric'}) : ''}</div>
+        <div class="dots" aria-label="Attendance by Sunday">${st.dates.map(d => `<i class="${st.here.has(d) ? 'y' : ''}" title="${fmt(d)}${st.here.has(d) ? ' — here' : ' — absent'}"></i>`).join('')}</div>
+        <div class="tiny muted" style="margin-top:4px">Oldest on the left. Green = here.</div>
+        <div class="lbl" style="margin:14px 0 4px">Lessons attended</div>${lessons.slice(0, 6).map(s => `<div class="list-item"><span>${esc(s.lesson.title)}</span><span class="tiny muted">${fmt(s.date, {month: 'short', day: 'numeric'})}</span></div>`).join('') || '<div class="small muted">None yet.</div>'}</section>
+      ${dir ? `<section class="card"><div class="sec"><h2>Health &amp; notes</h2></div><dl class="kv"><dt>Allergies</dt><dd>${esc(k.allergies || 'None listed')}</dd><dt>Medical</dt><dd>${esc(k.medical || 'None listed')}</dd><dt>Photos</dt><dd>${k.photo_ok === false ? 'Do not photograph or post' : 'OK to photograph'}</dd><dt>Started</dt><dd>${fmt(k.joined) || '—'}</dd><dt>Notes</dt><dd>${esc(k.notes || '—')}</dd></dl></section>
+      <section class="card"><div class="sec"><h2>Issues</h2><span class="chip">${iss.length}</span></div>${iss.map(issueCard).join('') || '<div class="small muted">No issues involving this child.</div>'}</section>` : ''}
+    </div>`;
+}
+
+/* ---- adults ---- */
+function viewAdults() {
+  const L = DB.adults.filter(a => isDirector() || a.rooms.some(r => myRooms().some(x => x.id === r))).sort((a, b) => ({bad: 0, warn: 1, ok: 2}[adultWorst(a)] - {bad: 0, warn: 1, ok: 2}[adultWorst(b)]) || a.name.localeCompare(b.name));
+  const due = DB.adults.filter(a => adultWorst(a) !== 'ok');
+  const cell = d => { const c = clearState(d); return `<span class="chip ${c.cls}">${esc(c.txt)}</span>`; };
+  return `<div class="day"><h1>Adults &amp; clearances</h1><span style="flex:1"></span>${isDirector() ? '<button class="btn gold" data-act="adultNew">+ Add an adult</button>' : ''}</div>
+    ${due.length ? `<div class="notice warn" style="margin-bottom:12px">⚠️ <div>${plural(due.length, 'adult')} need${due.length === 1 ? 's' : ''} a Child Abuse Clearance or Mandated Reporter Training on file or renewed before working with children: ${due.map(a => esc(a.name)).join(', ')}.</div></div>` : ''}
+    <div class="card scroll" style="padding:6px 10px"><table class="tbl"><thead><tr><th>Adult</th><th class="hide-sm">Classes</th><th>Child Abuse Clearance</th><th>Mandated Reporter Training</th></tr></thead><tbody>
+      ${L.map(a => `<tr class="${isDirector() ? 'click' : ''}" ${isDirector() ? `data-act="adultEdit" data-id="${a.id}"` : ''}><td><b>${esc(a.name)}</b><div class="tiny muted">${esc(roleName(a.role))}${a.phone ? ' · ' + esc(a.phone) : ''}${isDirector() ? (a.hub ? ' · 🔑 ' + esc(a.hub) : ' · <span style="color:var(--warn)">no login</span>') : ''}</div></td><td class="hide-sm small">${a.rooms.map(r => esc(room(r).name)).join(', ')}</td><td>${cell(a.clearances.child_abuse)}</td><td>${(c => `<span class="chip ${c.cls}">${esc(c.txt)}</span>`)(trainState(a))}</td></tr>`).join('')}</tbody></table></div>
+    <div class="tiny muted" style="margin-top:8px">Teachers and helpers need two things: a <b>PA Child Abuse Clearance</b> (renewed every 5 years from the date issued) and <b>Mandated Reporter Training</b> (good until the expiration date on the certificate). Both must be current to count toward the two-adult rule.</div>`;
+}
+
+/* ---- lessons ---- */
+function viewLessons() {
+  const rid = S.roomF === 'all' ? null : S.roomF;
+  const L = DB.sessions.filter(s => s.lesson && s.lesson.title && myRooms().some(r => r.id === s.room_id) && (!rid || s.room_id === rid)).sort((a, b) => b.date.localeCompare(a.date) || a.room_id.localeCompare(b.room_id));
+  return `<div class="day"><h1>Lessons</h1><span class="muted">${L.length} taught</span></div><div style="margin-bottom:12px">${roomChips(S.roomF, 'roomF', true)}</div>
+    <div class="card scroll" style="padding:6px 10px"><table class="tbl"><thead><tr><th>Date</th><th>Class</th><th>Lesson</th><th class="hide-sm">Plan</th><th class="num">Kids</th></tr></thead><tbody>
+    ${L.map(s => `<tr class="click" data-act="openDay" data-d="${s.date}" data-r="${s.room_id}"><td class="tiny" style="white-space:nowrap">${fmt(s.date, {month: 'short', day: 'numeric'})}</td><td class="small"><span class="dot" style="background:${room(s.room_id).color}"></span> ${esc(room(s.room_id).name)}</td><td><b>${esc(s.lesson.title)}</b><div class="tiny muted">${esc(s.lesson.summary || '')}</div></td><td class="hide-sm">${s.plan ? '<span class="chip ok">Plan</span>' : '<span class="tiny muted">—</span>'}</td><td class="num">${Object.values(s.att).filter(a => a.in).length}</td></tr>`).join('') || '<tr><td colspan="5" class="empty">No lessons yet.</td></tr>'}</tbody></table></div>`;
+}
+
+/* ---- issues ---- */
+const visibleIssues = () => DB.issues.filter(i => isDirector() || (myRooms().some(r => r.id === i.room_id) && i.by === (meAdult() || {}).name));
+function viewIssues() {
+  const L = visibleIssues().sort((a, b) => (a.status === 'Open' ? 0 : 1) - (b.status === 'Open' ? 0 : 1) || b.date.localeCompare(a.date));
+  return `<div class="day"><h1>Issues</h1><span class="muted">${L.filter(i => i.status === 'Open').length} open</span><span style="flex:1"></span><button class="btn gold" data-act="issueNew">+ Log an issue</button></div>
+    ${!isDirector() ? '<div class="notice info" style="margin-bottom:12px">You see the issues you logged. The Christian Ed Director sees every room’s issues and follows up.</div>' : ''}
+    <div class="stack">${L.map(issueCard).join('') || '<div class="card empty">No issues logged.</div>'}</div>`;
+}
+
+/* ---- monthly report ---- */
+function monthData(ym) {
+  const S1 = DB.sessions.filter(s => s.date.slice(0, 7) === ym);
+  const byRoom = DB.rooms.map(r => { const L = S1.filter(s => s.room_id === r.id); const counts = L.map(s => Object.values(s.att).filter(a => a.in).length); const kids = new Set(); L.forEach(s => Object.keys(s.att).forEach(id => s.att[id].in && kids.add(id)));
+    return {r, sundays: L.length, avg: counts.length ? Math.round(counts.reduce((a, b) => a + b, 0) / counts.length * 10) / 10 : 0, unique: kids.size, lessons: L.filter(s => s.lesson && s.lesson.title).sort((a, b) => a.date.localeCompare(b.date)).map(s => s.lesson.title), short: L.filter(s => (s.adults || []).map(adult).filter(a => a && adultCleared(a)) && !headOk(s.adults) && Object.keys(s.att).length).length}; });
+  const iss = DB.issues.filter(i => i.date.slice(0, 7) === ym); const visitors = S1.reduce((n, s) => n + (s.visitors || []).length, 0);
+  return {byRoom, iss, visitors, due: DB.adults.filter(a => adultWorst(a) !== 'ok')};
+}
+const classTotal = d => DB.sessions.filter(s => s.date === d && !isWeeknightId(s.room_id)).reduce((n, s) => n + Object.values(s.att).filter(a => a.in).length, 0);
+const churchKids = d => DB.church && DB.church[d] != null ? DB.church[d] : null;
+function kidsMonth(ym) { const D = [...new Set(DB.sessions.filter(s => s.date.slice(0, 7) === ym && !isWeeknightId(s.room_id)).map(s => s.date))].sort(); const L = D.map(d => ({date: d, church: churchKids(d), inClass: classTotal(d)})); const C = L.filter(x => x.church != null); const avg = a => a.length ? Math.round(a.reduce((p, q) => p + q, 0) / a.length * 10) / 10 : 0; return {L, avgChurch: avg(C.map(x => x.church)), avgClass: avg(L.map(x => x.inClass)), pct: C.length ? Math.round(C.reduce((n, x) => n + x.inClass, 0) / Math.max(1, C.reduce((n, x) => n + x.church, 0)) * 100) : null}; }
+function buildSummary(ym) { const m = monthData(ym); const k = kidsMonth(ym); const byType = {}; m.iss.forEach(i => { byType[i.type] = (byType[i.type] || 0) + 1; });
+  return {month: ym, generated_at: new Date().toISOString(), rooms: m.byRoom.map(x => ({id: x.r.id, name: x.r.name, color: x.r.color, sundays: x.sundays, avg: x.avg, unique: x.unique, lessons: x.lessons, short: x.short, weeknight: isWeeknight(x.r), meets: isWeeknight(x.r) ? meetsLabel(x.r) : ''})),
+    sundays: k.L.map(x => ({date: x.date, in_class: x.inClass, church_kids: x.church, by_room: Object.fromEntries(sundayRooms().map(r => { const ss = session(x.date, r.id); return [r.id, ss ? Object.values(ss.att).filter(a => a.in).length : 0]; }))})),
+    visitors: m.visitors, issues: {total: m.iss.length, open: m.iss.filter(i => i.status === 'Open').length, by_type: byType}, supervision_short: m.byRoom.reduce((n, x) => n + x.short, 0), clearances_due: m.due.length, text: summaryText(ym)}; }
+async function sendSummary(ym, quiet) {
+  if (!EDU_LIVE) { if (!quiet) toast('Demo — the live app sends this to delcBOARD automatically'); return false; }
+  try { const r = await fetch(EDU_LIVE.url + '/rest/v1/edu_summaries', {method: 'POST', headers: {apikey: EDU_LIVE.key, Authorization: 'Bearer ' + EDU_LIVE.key, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates'}, body: JSON.stringify({id: ym, month: ym, data: buildSummary(ym), sent_by: 'delcEDUCATION', sent_at: new Date().toISOString()})}); if (!r.ok) throw new Error(r.status); if (!quiet) toast('Sent to delcBOARD'); return true; } catch (e) { if (!quiet) toast('Could not reach delcBOARD — try again'); return false; }
+}
+async function loadChurchKids() {
+  if (!EDU_LIVE) return; try { const from = addDays(TODAY, -200); const r = await fetch(EDU_LIVE.url + `/rest/v1/att_days?select=day,services&day=gte.${from}`, {headers: {apikey: EDU_LIVE.key, Authorization: 'Bearer ' + EDU_LIVE.key}}); const L = await r.json(); DB.church = {}; L.forEach(d => { const n = (d.services || []).reduce((a, x) => a + (parseInt(x.kids, 10) || 0), 0); if (n) DB.church[d.day] = n; }); render(); } catch (_) {}
+}
+function summaryText(ym) {
+  const m = monthData(ym); const name = dOf(ym + '-01').toLocaleDateString('en-US', {month: 'long', year: 'numeric'});
+  const L = [`CHRISTIAN EDUCATION — ${name}`];
+  m.byRoom.filter(x => x.sundays).forEach(x => L.push(`${x.r.name}${isWeeknight(x.r) ? ' (' + meetsLabel(x.r) + ')' : ''} – ${plural(x.sundays, isWeeknight(x.r) ? 'class' : 'Sunday')}, average ${x.avg} kids (${x.unique} different children); lessons: ${x.lessons.join(', ') || '—'}`));
+  const kk = kidsMonth(ym); if (kk.pct != null) L.push(`Kids at church (weekly attendance report) – average ${kk.avgChurch} per Sunday; ${kk.avgClass} went to a class (${kk.pct}%)`);
+  if (m.visitors) L.push(`Visitors – ${m.visitors}`);
+  const byType = {}; m.iss.forEach(i => { byType[i.type] = (byType[i.type] || 0) + 1; });
+  L.push(m.iss.length ? `Issues – ${m.iss.length} (${Object.entries(byType).map(([t, n]) => `${n} ${t.toLowerCase()}`).join(', ')}); ${m.iss.filter(i => i.status === 'Open').length} still open` : 'Issues – none');
+  const short = m.byRoom.reduce((n, x) => n + x.short, 0); if (short) L.push(`Supervision – ${short} class${short === 1 ? '' : 'es'} had no cleared head teacher`);
+  if (m.due.length) L.push(`Clearances – ${plural(m.due.length, 'adult')} need renewal or paperwork`);
+  return L.join('\n');
+}
+function viewReport() {
+  const ym = S.monthOf; const m = monthData(ym); const max = Math.max(1, ...m.byRoom.map(x => x.avg));
+  const months = [...new Set(DB.sessions.map(s => s.date.slice(0, 7)))].sort().reverse();
+  return `<div class="day"><h1>Monthly report</h1><select class="inp" style="width:auto" data-chg="month" id="month">${months.map(x => `<option value="${x}" ${x === ym ? 'selected' : ''}>${dOf(x + '-01').toLocaleDateString('en-US', {month: 'long', year: 'numeric'})}</option>`).join('')}</select></div>
+    <div class="prof">
+      <section class="card"><div class="sec"><h2>Average attendance by room</h2></div>
+        ${m.byRoom.map(x => `<div class="barrow"><span>${esc(x.r.name)}</span><span class="track"><i style="width:${x.avg / max * 100}%;background:${x.r.color}"></i></span><span class="num"><b>${x.avg}</b></span></div>`).join('')}
+        <div class="tiny muted" style="margin-top:8px">Kids per Sunday, averaged over the ${Math.max(...m.byRoom.map(x => x.sundays))} Sundays with class this month.</div></section>
+      <section class="card"><div class="sec"><h2>At a glance</h2></div><dl class="kv">
+        <dt>Children</dt><dd>${m.byRoom.reduce((n, x) => n + x.unique, 0)} different kids came</dd>
+        <dt>Issues</dt><dd>${m.iss.length} logged · ${m.iss.filter(i => i.status === 'Open').length} open</dd>
+        <dt>Supervision</dt><dd>${m.byRoom.reduce((n, x) => n + x.short, 0)} classes without a cleared head teacher</dd>
+        <dt>Clearances</dt><dd>${m.due.length ? `${m.due.length} adults need attention` : 'All current'}</dd></dl></section>
+      <section class="card" style="grid-column:1/-1"><div class="sec"><h2>Kids at church vs. in a class</h2><span class="tiny muted">weekly attendance report vs. class check-ins</span></div>${kidsChart(kidsMonth(ym).L)}</section>
+      <section class="card" style="grid-column:1/-1"><div class="sec"><h2>Update for delcBOARD</h2><div class="row"><button class="btn" data-act="copy">Copy</button><button class="btn pri" data-act="sendBoard">Send to delcBOARD</button></div></div>
+        <div class="tiny muted" style="margin-bottom:8px">Christian Education’s part of the council update — counts and lessons only, never children’s names or issue details. ${EDU_LIVE ? 'It also updates delcBOARD on its own each time a Sunday is saved.' : 'Demo: in the live app this lands on the Christian Education page in delcBOARD on its own, ready for Erin’s monthly update.'}</div>
+        <textarea class="copy" id="sumtxt" readonly>${esc(summaryText(ym))}</textarea></section>
+    </div>`;
+}
+/* ---- schedule: who teaches each Sunday, merges, no-class days ---- */
+function planFor(date, rid) { let p = DB.schedule.find(x => x.date === date && x.room_id === rid); if (!p) { const ses = session(date, rid); p = {date, room_id: rid, adults: ses ? (ses.adults || []) : DB.adults.filter(a => a.rooms.includes(rid) && a.role !== 'Director').map(a => a.id), merge_into: null, cancelled: false, note: '', _auto: true}; } return p; }
+function planState(p) { if (p.cancelled) return {cls: '', txt: 'No class'}; if (p.merge_into) return {cls: 'info', txt: 'Merged → ' + room(p.merge_into).name}; const ok = p.adults.map(adult).filter(a => a && adultCleared(a)).length; const host = DB.rooms.filter(x => planFor(p.date, x.id).merge_into === p.room_id); if (headOk(p.adults)) return {cls: 'ok', txt: host.length ? `Hosting ${host.map(x => x.name).join(', ')}` : 'Covered'}; const L = p.adults.map(adult).filter(Boolean); if (!L.length) return {cls: 'bad', txt: 'No teachers'}; if (L.some(isHead)) return {cls: 'bad', txt: 'Head teacher not cleared'}; return {cls: 'warn', txt: 'Needs a head teacher'}; }
+function viewCal() {
+  const dir = isDirector(); const dates = Array.from({length: 8}, (_, i) => addDays(S.calFrom, 7 * i)); const R = dir ? DB.rooms : myRooms();
+  const me = meAdult();
+  const cell = (d, r) => { const p = planFor(d, r.id); const st = planState(p); const names = p.adults.map(id => { const a = adult(id); if (!a) return ''; const w = adultWorst(a); return `<div class="tiny" style="${me && a.id === me.id ? 'font-weight:800' : ''}">${esc(a.name)}${w !== 'ok' ? ` <span class="chip ${w}" style="padding:0 5px" title="${esc(w === 'bad' ? 'Clearance or training missing or expired' : 'Clearance or training renews soon — ' + [clearState(a.clearances.child_abuse), trainState(a)].filter(c => c.cls !== 'ok').map(c => c.txt).join(', '))}">${w === 'bad' ? '✕' : '!'}</span>` : ''}</div>`; }).join('');
+    return `<td class="${dir ? 'click' : ''}" ${dir ? `data-act="planEdit" data-d="${d}" data-r="${r.id}"` : ''}><span class="chip ${st.cls}">${esc(st.txt)}</span><div style="margin-top:4px">${p.cancelled || p.merge_into ? `<div class="tiny muted">${esc(p.note || '')}</div>` : names || '<div class="tiny muted">Nobody scheduled</div>'}</div>${!p.cancelled && !p.merge_into && p.note ? `<div class="tiny muted" style="margin-top:2px">${esc(p.note)}</div>` : ''}</td>`; };
+  const gaps = []; dates.forEach(d => DB.rooms.forEach(r => { const st = planState(planFor(d, r.id)); if (['warn', 'bad'].includes(st.cls)) gaps.push({d, r, st}); }));
+  return `<div class="day"><h1>${dir ? 'Sunday calendar' : 'My schedule'}</h1><span style="flex:1"></span><div class="stepper"><button data-act="calMove" data-v="-56" aria-label="Earlier">‹</button><span>${fmt(dates[0], {month: 'short', day: 'numeric'})} – ${fmt(dates[7], {month: 'short', day: 'numeric'})}</span><button data-act="calMove" data-v="56" aria-label="Later">›</button></div></div>
+    ${dir && gaps.length ? `<div class="notice warn" style="margin-bottom:12px">⚠️ <div><b>${gaps.length} class${gaps.length === 1 ? ' needs' : 'es need'} attention:</b> ${gaps.slice(0, 6).map(g => `${esc(g.r.name)} ${fmt(g.d, {month: 'short', day: 'numeric'})} (${esc(g.st.txt.toLowerCase())})`).join(', ')}${gaps.length > 6 ? '…' : ''}. Schedule a head teacher or merge the class.</div></div>` : ''}
+    ${dir ? '<div class="tiny muted" style="margin-bottom:8px">Tap a Sunday to change who teaches, merge a class into another room, or mark no class.</div>' : '<div class="tiny muted" style="margin-bottom:8px">When you’re scheduled to teach. Let the Christian Ed Director know if you can’t make a Sunday.</div>'}
+    <div class="card scroll" style="padding:6px 10px"><table class="tbl" style="table-layout:fixed;min-width:${110 + R.length * 170}px"><thead><tr><th style="width:90px">Sunday</th>${R.map(r => `<th><span class="dot" style="background:${r.color}"></span> ${esc(r.name)}</th>`).join('')}</tr></thead><tbody>
+    ${dates.map(d => `<tr><td style="white-space:nowrap"><b>${fmt(d, {month: 'short', day: 'numeric'})}</b>${d > TODAY && d <= addDays(TODAY, 7) ? '<div class="tiny" style="color:var(--gold);font-weight:700">next</div>' : d < TODAY ? '<div class="tiny muted">past</div>' : ''}</td>${R.map(r => cell(d, r)).join('')}</tr>`).join('')}</tbody></table></div>`;
+}
+function planModal2(date, rid) {
+  const r = room(rid); const cur = planFor(date, rid); const p = {...cur, adults: [...cur.adults]};
+  const L = DB.adults.slice().sort((a, b) => b.rooms.includes(rid) - a.rooms.includes(rid) || a.name.localeCompare(b.name));
+  const busy = id => DB.rooms.filter(x => x.id !== rid && planFor(date, x.id).adults.includes(id)).map(x => x.name);
+  S.modal = {plan: p, html: () => `${head(esc(r.name) + ' · ' + fmt(date, {weekday: 'short', month: 'short', day: 'numeric'}))}<div class="stack">
+    <div class="rooms" role="radiogroup" aria-label="This Sunday">${[['normal', 'Class as usual'], ['merge', 'Merge into another room'], ['cancel', 'No class']].map(([k, l]) => `<button class="chipbtn ${(k === 'normal' && !p.merge_into && !p.cancelled) || (k === 'merge' && p.merge_into) || (k === 'cancel' && p.cancelled) ? 'on' : ''}" data-act="planMode" data-v="${k}">${l}</button>`).join('')}</div>
+    ${p.merge_into !== null && p.merge_into !== undefined && !p.cancelled ? `<label class="f" for="pl_into">Meets with<select id="pl_into">${DB.rooms.filter(x => x.id !== rid).map(x => `<option value="${x.id}" ${x.id === p.merge_into ? 'selected' : ''}>${esc(x.name)} — ${esc(x.ages)}</option>`).join('')}</select></label><div class="tiny muted">This room’s children show on that room’s attendance list that Sunday.</div>` : ''}
+    ${!p.merge_into && !p.cancelled ? `<div class="f"><span>Teaching this Sunday</span>${L.map(a => { const w = adultWorst(a); const b = busy(a.id); return `<label class="list-item" style="cursor:pointer"><span class="row" style="gap:8px"><input type="checkbox" class="pl_ad" value="${a.id}" ${p.adults.includes(a.id) ? 'checked' : ''}><span><b>${esc(a.name)}</b> <span class="tiny muted">${esc(roleName(a.role))}${a.rooms.includes(rid) ? '' : ' · usually ' + esc(a.rooms.map(x => room(x).name).join(', ') || '—')}</span>${b.length ? `<div class="tiny" style="color:var(--warn)">Also scheduled in ${esc(b.join(', '))}</div>` : ''}</span></span><span class="chip ${w}">${w === 'ok' ? '✓ cleared' : w === 'warn' ? 'renew soon' : '✕ not cleared'}</span></label>`; }).join('')}</div>` : ''}
+    <label class="f" for="pl_note">Note<input id="pl_note" value="${esc(p.note || '')}" placeholder="${p.merge_into ? 'e.g. Teacher away — shared lesson' : p.cancelled ? 'e.g. Christmas program rehearsal' : 'e.g. Sub: ask the Youth Group leader'}"></label></div>${foot()}`,
+    onSave: () => { grabPlan(); const q = S.modal.plan; delete q._auto; if (q.merge_into) q.adults = []; const i = DB.schedule.findIndex(x => x.date === date && x.room_id === rid); if (i >= 0) DB.schedule[i] = q; else DB.schedule.push(q); toast('Schedule saved'); return true; }}; renderModal();
+}
+function grabPlan() { const p = S.modal.plan; if ($('#pl_into')) p.merge_into = val('pl_into'); if ($$('.pl_ad').length) p.adults = $$('.pl_ad:checked').map(c => c.value); if ($('#pl_note')) p.note = val('pl_note'); }
+
+/* ---- director dashboard ---- */
+function attSeries(rid, dates) { return dates.map(d => { const s = session(d, rid); return s ? Object.values(s.att).filter(a => a.in).length : null; }); }
+function lineChart(dates) {
+  const W = 1040, H = 300, L = 40, Rr = 20, T = 16, B = 34; const series = DB.rooms.map(r => ({r, v: attSeries(r.id, dates)}));
+  const max = Math.max(4, ...series.flatMap(x => x.v.filter(v => v != null))); const top = Math.ceil(max / 2) * 2;
+  const X = i => L + (W - L - Rr) * (dates.length === 1 ? .5 : i / (dates.length - 1)), Y = v => T + (H - T - B) * (1 - v / top);
+  const ticks = Array.from({length: top / 2 + 1}, (_, i) => i * 2);
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Children per Sunday by room" style="width:100%;height:auto;display:block">
+    ${ticks.map(t => `<line x1="${L}" x2="${W - Rr}" y1="${Y(t)}" y2="${Y(t)}" stroke="var(--line)" stroke-width="1"/><text x="${L - 8}" y="${Y(t) + 4}" text-anchor="end" font-size="11" fill="var(--muted)">${t}</text>`).join('')}
+    ${dates.map((d, i) => `<text x="${X(i)}" y="${H - 12}" text-anchor="middle" font-size="11" fill="var(--muted)">${fmt(d, {month: 'short', day: 'numeric'})}</text>`).join('')}
+    ${series.map(({r, v}) => { const pts = v.map((y, i) => y == null ? null : [X(i), Y(y)]).filter(Boolean); return `<polyline points="${pts.map(p => p.join(',')).join(' ')}" fill="none" stroke="${r.color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>${pts.map((p, i) => `<circle cx="${p[0]}" cy="${p[1]}" r="${i === pts.length - 1 ? 4.5 : 3}" fill="${r.color}" stroke="var(--card)" stroke-width="1.5"><title>${esc(r.name)}: ${v[i]} kids</title></circle>`).join('')}`; }).join('')}
+  </svg>`;
+}
+function kidsChart(L) {
+  if (!L.length) return '<div class="small muted">No Sundays yet.</div>';
+  const W = 1040, H = 250, Lm = 40, Rm = 16, T = 22, B = 40; const max = Math.max(4, ...L.map(x => Math.max(x.church || 0, x.inClass))); const top = Math.ceil(max / 5) * 5;
+  const slot = (W - Lm - Rm) / L.length, bw = Math.min(34, slot * .32); const Y = v => T + (H - T - B) * (1 - v / top); const ticks = Array.from({length: top / 5 + 1}, (_, i) => i * 5);
+  return `<div class="row tiny" style="gap:14px;margin-bottom:6px;font-weight:700"><span class="row" style="gap:6px"><span style="width:12px;height:12px;border-radius:3px;background:var(--line);display:inline-block"></span>Kids at church (weekly report)</span><span class="row" style="gap:6px"><span style="width:12px;height:12px;border-radius:3px;background:var(--gold);display:inline-block"></span>Checked into a class</span></div>
+  <div class="scroll"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Kids at church compared with kids in a class, by Sunday" style="width:100%;height:auto;display:block">
+  ${ticks.map(t => `<line x1="${Lm}" x2="${W - Rm}" y1="${Y(t)}" y2="${Y(t)}" stroke="var(--line)"/><text x="${Lm - 8}" y="${Y(t) + 4}" text-anchor="end" font-size="12" fill="var(--muted)">${t}</text>`).join('')}
+  ${L.map((x, i) => { const cx = Lm + slot * i + slot / 2; const c = x.church; const pct = c ? Math.round(x.inClass / c * 100) : null;
+    return `${c != null ? `<rect x="${cx - bw - 2}" y="${Y(c)}" width="${bw}" height="${Y(0) - Y(c)}" rx="3" fill="var(--line)"><title>${fmt(x.date)}: ${c} kids at church</title></rect><text x="${cx - bw / 2 - 2}" y="${Y(c) - 5}" text-anchor="middle" font-size="12" fill="var(--muted)">${c}</text>` : ''}
+      <rect x="${cx + 2}" y="${Y(x.inClass)}" width="${bw}" height="${Y(0) - Y(x.inClass)}" rx="3" fill="var(--gold)"><title>${fmt(x.date)}: ${x.inClass} kids in a class</title></rect><text x="${cx + bw / 2 + 2}" y="${Y(x.inClass) - 5}" text-anchor="middle" font-size="12" font-weight="700" fill="var(--ink)">${x.inClass}</text>
+      <text x="${cx}" y="${H - 22}" text-anchor="middle" font-size="12" fill="var(--muted)">${fmt(x.date, {month: 'short', day: 'numeric'})}</text>${pct != null ? `<text x="${cx}" y="${H - 6}" text-anchor="middle" font-size="11.5" font-weight="700" fill="${pct >= 75 ? 'var(--ok)' : 'var(--warn)'}">${pct}%</text>` : ''}`; }).join('')}
+  </svg></div><div class="tiny muted">The percentage under each Sunday is how many of the kids at church went to a class. Kids at church comes from the weekly Attendance &amp; Giving report.</div>`;
+}
+function viewDash() {
+  const last = lastSunday(TODAY); const dates = Array.from({length: 8}, (_, i) => addDays(last, -7 * (7 - i)));
+  const next = addDays(last, 7);
+  const rows = DB.rooms.map(r => { const v = attSeries(r.id, dates); const nn = v.filter(x => x != null); const lastV = v[v.length - 1]; const prev4 = v.slice(-5, -1).filter(x => x != null); const avg4 = prev4.length ? prev4.reduce((a, b) => a + b, 0) / prev4.length : 0; const enrolled = DB.students.filter(k => k.room_id === r.id && k.active !== false && !k.visitor).length;
+    const diff = lastV != null ? lastV - avg4 : 0; return {r, lastV, avg4, enrolled, diff, avg8: nn.length ? nn.reduce((a, b) => a + b, 0) / nn.length : 0}; });
+  const tot = rows.reduce((n, x) => n + (x.lastV || 0), 0);
+  const openIss = DB.issues.filter(i => i.status === 'Open'); const due = DB.adults.filter(a => adultWorst(a) !== 'ok');
+  const gaps = []; for (let w = 0; w < 4; w++) { const d = addDays(next, 7 * w); DB.rooms.forEach(r => { const st = planState(planFor(d, r.id)); if (['warn', 'bad'].includes(st.cls)) gaps.push({d, r, st}); }); }
+  const nextRow = DB.rooms.map(r => { const p = planFor(next, r.id); const st = planState(p); return `<div class="list-item"><span class="row" style="gap:6px"><span class="dot" style="background:${r.color}"></span><b>${esc(r.name)}</b></span><span class="row" style="gap:6px"><span class="tiny muted">${p.merge_into || p.cancelled ? '' : esc(p.adults.map(id => (adult(id) || {}).name).filter(Boolean).join(', ') || 'nobody')}</span><span class="chip ${st.cls}">${esc(st.txt)}</span></span></div>`; }).join('');
+  return `<div class="day"><h1>${(() => { const h = new Date().getHours(); return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'; })()}, ${esc(String(((typeof Live !== 'undefined' && Live.on) ? ((Live.meId && (adult(Live.meId) || {}).name) || (Live.sess && (Live.sess.displayName || Live.sess.username)) || '') : 'Erin Peterman')).split(' ')[0])}</h1><span class="muted">Christian Education at a glance</span></div>
+    <div class="stats"><div class="stat"><span class="lbl">Kids in class last Sunday</span><b>${tot}</b><span class="tiny muted">${churchKids(last) != null ? `of ${churchKids(last)} at church (${Math.round(tot / churchKids(last) * 100)}%)` : fmt(last, {month: 'short', day: 'numeric'}) + ' · all rooms'}</span></div>
+      <div class="stat ${gaps.length ? 'alert' : ''}"><span class="lbl">Classes to cover</span><b>${gaps.length}</b><span class="tiny muted">next 4 Sundays</span></div>
+      <div class="stat ${openIss.length ? 'alert' : ''}"><span class="lbl">Open issues</span><b>${openIss.length}</b><span class="tiny muted">${openIss.length ? esc([...new Set(openIss.map(i => i.type))].join(', ')) : 'all resolved'}</span></div>
+      <div class="stat ${due.length ? 'alert' : ''}"><span class="lbl">Clearances due</span><b>${due.length}</b><span class="tiny muted">${due.length ? 'renew or missing' : 'all current'}</span></div></div>
+    <section class="card" style="margin-bottom:14px"><div class="sec"><h2>Kids at church vs. in a class</h2><span class="tiny muted">last 8 Sundays</span></div>${kidsChart(dates.map(d => ({date: d, church: churchKids(d), inClass: classTotal(d)})))}</section>
+    <section class="card" style="margin-bottom:14px"><div class="sec"><h2>Attendance by room</h2><span class="tiny muted">children checked in, last 8 Sundays</span></div>
+      <div class="row" style="gap:14px;margin-bottom:6px">${DB.rooms.map(r => `<span class="row tiny" style="gap:6px;font-weight:700"><span style="width:16px;height:3px;border-radius:2px;background:${r.color};display:inline-block"></span>${esc(r.name)}</span>`).join('')}</div>
+      <div class="scroll">${lineChart(dates)}</div>
+      <div class="scroll" style="margin-top:10px"><table class="tbl"><thead><tr><th>Room</th><th class="num">Last Sunday</th><th class="num">4-week avg</th><th class="num hide-sm">8-week avg</th><th class="num">Enrolled</th><th class="hide-sm">Trend</th></tr></thead><tbody>
+        ${rows.map(x => `<tr class="click" data-act="openDay" data-d="${last}" data-r="${x.r.id}"><td><span class="dot" style="background:${x.r.color}"></span> <b>${esc(x.r.name)}</b></td><td class="num"><b>${x.lastV ?? '—'}</b></td><td class="num">${x.avg4.toFixed(1)}</td><td class="num hide-sm">${x.avg8.toFixed(1)}</td><td class="num">${x.enrolled}</td><td class="hide-sm">${x.lastV == null ? '' : x.diff >= 1 ? '<span class="chip ok">▲ up</span>' : x.diff <= -1 ? '<span class="chip warn">▼ down</span>' : '<span class="chip">steady</span>'}</td></tr>`).join('')}</tbody></table></div></section>
+    <div class="prof">
+      <section class="card"><div class="sec"><h2>Next Sunday · ${fmt(next, {month: 'short', day: 'numeric'})}</h2><button class="btn sm" data-act="tab" data-v="cal">Calendar</button></div>${nextRow}
+        ${gaps.length ? `<div class="lbl" style="margin:12px 0 4px">Coming up</div>${gaps.slice(0, 5).map(g => `<div class="list-item"><span class="small">${fmt(g.d, {month: 'short', day: 'numeric'})} · ${esc(g.r.name)}</span><button class="btn sm" data-act="planEdit" data-d="${g.d}" data-r="${g.r.id}">${esc(g.st.txt)} — fix</button></div>`).join('')}` : ''}</section>
+      <section class="card"><div class="sec"><h2>Needs your attention</h2></div>
+        ${openIss.slice(0, 4).map(i => `<div class="list-item"><span class="small"><b>${esc(i.type)}</b> · ${esc(room(i.room_id).name)} · ${fmt(i.date, {month: 'short', day: 'numeric'})}</span><button class="btn sm" data-act="issueEdit" data-id="${i.id}">Open</button></div>`).join('')}
+        ${due.slice(0, 4).map(a => `<div class="list-item"><span class="small"><b>${esc(a.name)}</b> · clearances ${adultWorst(a) === 'bad' ? 'missing or expired' : 'due soon'}</span><button class="btn sm" data-act="adultEdit" data-id="${a.id}">Update</button></div>`).join('')}
+        ${!openIss.length && !due.length ? '<div class="small muted">Nothing waiting.</div>' : ''}</section>
+    </div>`;
+}
+/* building rooms come from delcFACILITIES (fac_settings.data.locations) */
+let FAC_ROOMS = ['Nave/Sanctuary', 'Narthex', 'Social Hall', 'Family Life Center', 'Kitchen', 'Kids Korner - Nursery/Pre-K', 'Kids Korner - Elementary', 'Kids Korner - Youth', 'Chapel', 'Library/Pet Pantry', 'Red Room', 'FLC Board Room', 'Parlor', 'JAM Room'];
+let FAC_FROM = 'delcFACILITIES (copied for the demo)';
+const DEF_PLACE = {kk: 'Kids Korner - Nursery/Pre-K', cc: 'Kids Korner - Elementary', ss: 'Kids Korner - Elementary', yg: 'Kids Korner - Youth'};
+const placeOf = r => r.place || DEF_PLACE[r.id] || '';
+async function loadFacRooms() { if (!EDU_LIVE) return; try { const r = await fetch(EDU_LIVE.url + '/rest/v1/fac_settings?select=data&id=eq.main', {headers: {apikey: EDU_LIVE.key, Authorization: 'Bearer ' + EDU_LIVE.key}}); const j = await r.json(); const L = j && j[0] && j[0].data && j[0].data.locations; if (Array.isArray(L) && L.length) { FAC_ROOMS = L; FAC_FROM = 'delcFACILITIES'; render(); } } catch (_) {} }
+function viewRooms() {
+  return `<div class="day"><h1>Classes</h1><span style="flex:1"></span><button class="btn gold" data-act="roomNew">+ Add a class</button></div><div class="tiny muted" style="margin-bottom:8px">Add a class when you start one, and delete it when it ends. Deleting moves its students to another class; past attendance and lessons are kept.</div><div class="card">${DB.rooms.map(r => `<div class="list-item"><div class="row"><span class="dot" style="background:${r.color};width:14px;height:14px"></span><b>${esc(r.name)}</b><span class="muted small">${esc(r.ages)}</span>${placeOf(r) ? `<span class="chip">📍 ${esc(placeOf(r))}</span>` : ''}${isWeeknight(r) ? `<span class="chip info">📅 ${esc(meetsLabel(r))}</span>` : ''}</div><div class="row"><span class="tiny muted">${DB.students.filter(k => inClass(k, r.id) && k.active !== false).length} students</span><button class="btn sm" data-act="roomEdit" data-id="${r.id}">Edit</button><button class="btn sm ghost danger" data-act="roomDel" data-id="${r.id}" aria-label="Delete ${esc(r.name)}">Delete</button></div></div>`).join('')}</div><div class="tiny muted" style="margin-top:8px">“Meets in” uses the building’s room list from ${esc(FAC_FROM)}, so a room name matches work orders and key holders there.</div>`;
+}
+
+/* ======== modals ======== */
+function renderModal() {
+  const m = S.modal; const box = $('#modal'); if (!m) { box.innerHTML = ''; return; }
+  box.innerHTML = `<div class="mbg" data-act="bg"><div class="modal" role="dialog" aria-modal="true">${m.html()}</div></div>`;
+  const f = box.querySelector('input:not([type=checkbox]),textarea,select'); if (f && m.focus !== false) setTimeout(() => f.focus(), 30);
+}
+const openModal = (html, onSave) => { S.modal = {html, onSave}; renderModal(); };
+const closeModal = () => { S.modal = null; renderModal(); };
+const head = t => `<div class="mhead"><h2>${t}</h2><button class="x" data-act="close" aria-label="Close">×</button></div>`;
+const foot = (save, extra) => `<div class="row" style="justify-content:flex-end;margin-top:14px">${extra || ''}<span style="flex:1"></span><button class="btn" data-act="close">Cancel</button><button class="btn pri" data-act="save">${save || 'Save'}</button></div>`;
+const val = id => { const e = $('#' + id); return e ? e.value.trim() : ''; };
+
+function lessonModal() { const s = ensureSession(S.date, S.room); openModal(() => `${head('Today’s lesson')}<div class="stack"><label class="f" for="l_t">Lesson title<input id="l_t" value="${esc(s.lesson.title)}" placeholder="Noah and the big boat"></label><label class="f" for="l_s">Scripture (optional)<input id="l_s" value="${esc(s.lesson.scripture)}" placeholder="Genesis 6–9"></label><label class="f" for="l_d">What you taught — a sentence or two<textarea id="l_d" rows="3">${esc(s.lesson.summary)}</textarea></label>
+  ${pastLessons(s).length ? `<label class="f" for="l_copy">Or start from a past lesson<select id="l_copy" data-chg="copyLesson"><option value="">— Pick —</option>${pastLessons(s).map(x => `<option value="${x.id}">${esc(x.lesson.title)} (${fmt(x.date, {month: 'short', day: 'numeric', year: 'numeric'})})</option>`).join('')}</select></label>` : ''}</div>${foot()}`, () => { s.lesson = {title: val('l_t'), scripture: val('l_s'), summary: val('l_d')}; return true; }); }
+const pastLessons = s => DB.sessions.filter(x => x !== s && x.lesson && x.lesson.title && x.room_id === s.room_id).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 20);
+function planModal() { const s = ensureSession(S.date, S.room); const P = s.plan || {}; const F = [['objectives', 'Goal — what kids should take away', 2], ['opening', 'Opening', 2], ['activities', 'Activities', 3], ['craft', 'Craft / game', 2], ['closing', 'Closing', 2], ['materials', 'Materials', 2], ['notes', 'Notes for next time', 2]];
+  openModal(() => `${head('Lesson plan')}<div class="tiny muted" style="margin:-6px 0 10px">Optional. Fill in only what helps.</div><div class="stack">${F.map(([k, l, n]) => `<label class="f" for="p_${k}">${l}<textarea id="p_${k}" rows="${n}">${esc(P[k] || '')}</textarea></label>`).join('')}</div>${foot('Save plan', s.plan ? '<button class="btn danger" data-act="planDel">Remove plan</button>' : '')}`, () => { const p = {}; F.forEach(([k]) => p[k] = val('p_' + k)); s.plan = Object.values(p).some(Boolean) ? p : null; return true; }); }
+function checkoutModal(k) { const s = ensureSession(S.date, S.room); const L = (k.pickups || []).concat(k.guardians.filter(g => !(k.pickups || []).some(p => p.name === g.name)));
+  openModal(() => `${head('Check out ' + esc(k.first))}<div class="stack"><div class="lbl">Who is picking up?</div><div class="rooms">${L.map((p, i) => `<button class="chipbtn" data-act="pickup" data-v="${esc(p.name)}">${esc(p.name)} <span class="tiny muted">${esc(p.rel || '')}</span></button>`).join('')}</div>
+    <label class="f" for="co_other">Someone else<input id="co_other" placeholder="Name"></label><div class="tiny muted">Someone not on the list needs the parent’s OK — that check-out is flagged for the director.</div></div>${foot('Check out')}`, () => { const other = val('co_other'); if (!other) { toast('Pick who is picking up'); return false; } doCheckout(k, other, true); return true; }); }
+function doCheckout(k, name, flagged) { const s = ensureSession(S.date, S.room); s.att[k.id] = {...(s.att[k.id] || {}), out: nowT(), to: name}; if (flagged) DB.issues.push({id: 'i' + uid(), date: S.date, room_id: S.room, type: 'Pickup', student_ids: [k.id], description: `${k.first} was picked up by ${name}, who is not on the pickup list.`, action: '', parent_notified: false, followup: 'Confirm with the parent and update the pickup list.', status: 'Open', by: (meAdult() || {}).name || ''}); }
+function visitorModal() { openModal(() => `${head('Add a visitor')}<div class="stack"><div class="grid2"><label class="f" for="v_f">First name<input id="v_f"></label><label class="f" for="v_l">Last name<input id="v_l"></label></div><label class="f" for="v_dob">Birthday<input id="v_dob" type="date"></label><div class="grid2"><label class="f" for="v_g">Parent / guardian<input id="v_g"></label><label class="f" for="v_p">Their phone<input id="v_p" inputmode="tel"></label></div><label class="f" for="v_a">Allergies or medical needs<input id="v_a" placeholder="None"></label></div>${foot('Add and check in')}`, () => { if (!val('v_f')) { toast('Enter a first name'); return false; } const g = val('v_g'); const k = {id: 'k' + uid(), first: val('v_f'), last: val('v_l'), dob: val('v_dob'), room_id: S.room, grade: '', guardians: [{name: g, rel: 'Parent', phone: val('v_p'), email: ''}], pickups: g ? [{name: g, rel: 'Parent', phone: val('v_p')}] : [], allergies: val('v_a'), medical: '', photo_ok: false, notes: 'Visitor — added ' + fmt(S.date), active: true, visitor: true, joined: S.date}; DB.students.push(k); const s = ensureSession(S.date, S.room); s.visitors = [...(s.visitors || []), k.id]; s.att[k.id] = {in: nowT(), by: g}; toast(k.first + ' added and checked in'); return true; }); }
+function adultAddModal() { const s = ensureSession(S.date, S.room); const L = DB.adults.filter(a => !(s.adults || []).includes(a.id)).sort((a, b) => b.rooms.includes(S.room) - a.rooms.includes(S.room)); openModal(() => `${head('Who is in the room?')}<div class="stack">${L.map(a => { const w = adultWorst(a); return `<button class="btn" style="justify-content:space-between;width:100%" data-act="adultPick" data-id="${a.id}"><span><b>${esc(a.name)}</b> <span class="tiny muted">${esc(roleName(a.role))}</span></span><span class="chip ${w}">${w === 'ok' ? '✓ cleared' : w === 'warn' ? 'renew soon' : '✕ not cleared'}</span></button>`; }).join('') || '<div class="muted">Everyone is already signed in.</div>'}</div><div class="row" style="justify-content:flex-end;margin-top:14px"><button class="btn" data-act="close">Done</button></div>`); }
+function issueModal(i) { const isNew = !i; i = i || {type: 'Injury', student_ids: [], description: '', action: '', parent_notified: false, notified_at: '', followup: '', status: 'Open', date: S.date, room_id: S.room};
+  const kids = DB.students.filter(k => k.room_id === i.room_id || (k.also || []).includes(i.room_id)).sort((a, b) => a.first.localeCompare(b.first));
+  openModal(() => `${head(isNew ? 'Log an issue' : 'Issue')}<div class="stack"><div class="grid2"><label class="f" for="i_type">What kind<select id="i_type">${['Injury', 'Behavior', 'Health / allergy', 'Supervision', 'Pickup', 'Facility / supplies', 'Other'].map(t => `<option ${t === i.type ? 'selected' : ''}>${t}</option>`).join('')}</select></label><label class="f" for="i_room">Room<select id="i_room">${DB.rooms.map(r => `<option value="${r.id}" ${r.id === i.room_id ? 'selected' : ''}>${esc(r.name)}</option>`).join('')}</select></label></div>
+    <div class="f"><span>Children involved (optional)</span><div class="rooms">${kids.map(k => `<label class="chipbtn" style="font-weight:600"><input type="checkbox" class="i_kid" value="${k.id}" ${(i.student_ids || []).includes(k.id) ? 'checked' : ''}> ${esc(kname(k))}</label>`).join('')}</div></div>
+    <label class="f" for="i_d">What happened<textarea id="i_d" rows="3">${esc(i.description)}</textarea></label><label class="f" for="i_a">What you did<textarea id="i_a" rows="2">${esc(i.action)}</textarea></label>
+    <div class="grid2"><label class="row small" style="font-weight:600"><input type="checkbox" id="i_pn" ${i.parent_notified ? 'checked' : ''}> Parent was told</label><label class="f" for="i_pt">At what time<input id="i_pt" type="time" value="${esc(i.notified_at || '')}"></label></div>
+    <label class="f" for="i_f">Follow-up needed<input id="i_f" value="${esc(i.followup || '')}"></label>${isDirector() ? `<label class="f" for="i_s">Status<select id="i_s">${['Open', 'Resolved'].map(s => `<option ${s === i.status ? 'selected' : ''}>${s}</option>`).join('')}</select></label>` : ''}
+    <div class="tiny muted">Only the Christian Ed Director sees issue details. Council sees counts.</div></div>${foot(isNew ? 'Log it' : 'Save', !isNew && isDirector() ? '<button class="btn danger" data-act="issueDel">Delete</button>' : '')}`, () => { if (!val('i_d')) { toast('Describe what happened'); return false; } Object.assign(i, {type: val('i_type'), room_id: val('i_room'), student_ids: $$('.i_kid:checked').map(c => c.value), description: val('i_d'), action: val('i_a'), parent_notified: $('#i_pn').checked, notified_at: val('i_pt'), followup: val('i_f'), status: $('#i_s') ? val('i_s') : i.status}); if (isNew) { i.id = 'i' + uid(); i.by = (meAdult() || {}).name || ''; DB.issues.push(i); } toast(isNew ? 'Logged — the director will see it' : 'Saved'); return true; }); S.modal.issue = i; }
+function studentModal(k) { const isNew = !k; k = k ? JSON.parse(JSON.stringify(k)) : {id: 'k' + uid(), first: '', last: '', dob: '', room_id: DB.rooms[0].id, grade: '', guardians: [{name: '', rel: 'Parent', phone: '', email: ''}], pickups: [], allergies: '', medical: '', photo_ok: true, notes: '', active: true, visitor: false, joined: TODAY};
+  S.modal = {k, isNew, html: () => { const x = S.modal.k; const P = (arr, cls, title) => `<div class="lbl" style="margin-top:6px">${title}</div>${arr.map((g, i) => `<div class="grid3"><input class="inp ${cls}" data-i="${i}" data-k="name" value="${esc(g.name)}" placeholder="Name" aria-label="${title} name"><input class="inp ${cls}" data-i="${i}" data-k="rel" value="${esc(g.rel || '')}" placeholder="Relationship" aria-label="Relationship"><input class="inp ${cls}" data-i="${i}" data-k="phone" value="${esc(g.phone || '')}" placeholder="Phone" inputmode="tel" aria-label="Phone"></div>`).join('')}<button class="btn sm" data-act="addPerson" data-v="${cls}">+ Add</button>`;
+    return `${head(isNew ? 'Add a student' : 'Edit ' + esc(x.first))}<div class="stack"><div class="grid2"><label class="f" for="s_f">First name<input id="s_f" value="${esc(x.first)}"></label><label class="f" for="s_l">Last name<input id="s_l" value="${esc(x.last)}"></label></div>
+      <div class="grid3"><label class="f" for="s_dob">Birthday<input id="s_dob" type="date" value="${esc(x.dob)}"></label><label class="f" for="s_g">Grade<input id="s_g" value="${esc(x.grade)}"></label><label class="f" for="s_r">Room<select id="s_r">${DB.rooms.map(r => `<option value="${r.id}" ${r.id === x.room_id ? 'selected' : ''}>${esc(r.name)}</option>`).join('')}</select></label></div>
+      ${P(x.guardians, 'gd', 'Parents / guardians')}${P(x.pickups, 'pu', 'Allowed to pick up')}
+      <label class="f" for="s_a">Allergies<input id="s_a" value="${esc(x.allergies)}" placeholder="None"></label><label class="f" for="s_m">Medical needs<input id="s_m" value="${esc(x.medical)}" placeholder="None"></label>
+      <div class="row"><label class="row small" style="font-weight:600"><input type="checkbox" id="s_ph" ${x.photo_ok !== false ? 'checked' : ''}> OK to photograph</label><label class="row small" style="font-weight:600"><input type="checkbox" id="s_act" ${x.active !== false ? 'checked' : ''}> Active</label><label class="row small" style="font-weight:600"><input type="checkbox" id="s_vis" ${x.visitor ? 'checked' : ''}> Visitor</label></div>
+      <label class="f" for="s_n">Notes (director only)<textarea id="s_n" rows="2">${esc(x.notes)}</textarea></label></div>${foot(isNew ? 'Add student' : 'Save')}`; },
+    onSave: () => { grabStudent(); const x = S.modal.k; if (!x.first) { toast('Enter a first name'); return false; } x.guardians = x.guardians.filter(g => g.name); x.pickups = x.pickups.filter(g => g.name); const i = DB.students.findIndex(s => s.id === x.id); if (i >= 0) DB.students[i] = x; else DB.students.push(x); toast('Saved'); return true; }}; renderModal(); }
+function grabStudent() { const x = S.modal.k; Object.assign(x, {first: val('s_f'), last: val('s_l'), dob: val('s_dob'), grade: val('s_g'), room_id: val('s_r'), allergies: val('s_a'), medical: val('s_m'), photo_ok: $('#s_ph').checked, active: $('#s_act').checked, visitor: $('#s_vis').checked, notes: val('s_n')}); [['gd', 'guardians'], ['pu', 'pickups']].forEach(([c, k]) => $$('.' + c).forEach(el => { x[k][+el.dataset.i][el.dataset.k] = el.value.trim(); })); }
+function adultModal(a) { const isNew = !a; a = a ? JSON.parse(JSON.stringify(a)) : {id: 'a' + uid(), name: '', role: 'Helper', rooms: [], phone: '', email: '', hub: '', clearances: {child_abuse: ''}, training_exp: '', training: ''};
+  const live = typeof Live !== 'undefined' && Live.on;
+  openModal(() => `${head(isNew ? 'Add an adult' : esc(a.name))}<div class="stack"><div class="grid2"><label class="f" for="a_n">Name<input id="a_n" value="${esc(a.name)}"></label><label class="f" for="a_r">Role<select id="a_r">${['Room leader', 'Helper', 'Director'].map(r => `<option value="${r}" ${r === a.role ? 'selected' : ''}>${roleName(r)}</option>`).join('')}</select></label></div><div class="grid2"><label class="f" for="a_p">Phone<input id="a_p" value="${esc(a.phone)}" inputmode="tel"></label><label class="f" for="a_e">Email<input id="a_e" type="email" value="${esc(a.email || '')}" autocapitalize="off" placeholder="name@mydelc.org"></label></div>
+    <div class="signin"><div class="lbl">DELC Apps sign-in <span class="tiny muted" style="text-transform:none;letter-spacing:0;font-weight:600">— the same login as the DELC Apps Hub</span></div>
+    <div class="grid2"><label class="f" for="a_hub">Username<input id="a_hub" value="${esc(a.hub || '')}" autocapitalize="off" autocomplete="off" placeholder="e.g. epeterman"></label><label class="f" for="a_pw">${a.hub ? 'New password <span class="tiny muted">(optional)</span>' : 'Password'}<span class="pwrow"><input id="a_pw" type="password" autocomplete="new-password" placeholder="${a.hub ? 'Leave blank to keep it' : 'At least 6 characters'}"><button type="button" class="btn sm ghost" data-act="pwShow" aria-label="Show password">Show</button></span></label></div>
+    <div class="tiny muted" id="a_acct">${live ? (a.hub ? 'Checking the DELC Apps account…' : 'Enter a username (or leave it blank to use first initial + last name) and a password to create their login. They get delcEDUCATION access, and it shows in the Admin Portal.') : 'Demo: sign-in accounts are created only in the live app.'}</div></div>
+    <div class="f"><span>Classes they teach or help in</span><div class="rooms">${DB.rooms.map(r => `<label class="chipbtn" style="font-weight:600"><input type="checkbox" class="a_room" value="${r.id}" ${a.rooms.includes(r.id) ? 'checked' : ''}> ${esc(r.name)}</label>`).join('')}</div></div>
+    <div class="lbl">Required for working with children</div><div class="grid2"><label class="f" for="a_c1">Child Abuse Clearance <span class="tiny muted">(date issued — good 5 years)</span><input id="a_c1" type="date" value="${esc(a.clearances.child_abuse)}"></label><label class="f" for="a_tx">Mandated Reporter Training <span class="tiny muted">(expiration date)</span><input id="a_tx" type="date" value="${esc(a.training_exp || '')}"></label></div>${a.training && !a.training_exp ? `<div class="tiny muted">Training completed ${fmt(a.training)} — enter the expiration date from the certificate.</div>` : ''}<div class="err" id="a_err" role="alert"></div></div>${foot()}`, () => {
+    if (!val('a_n')) { toast('Enter a name'); return false; }
+    const email = val('a_e'); if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { adultErr('That email doesn’t look right.'); return false; }
+    Object.assign(a, {name: val('a_n'), role: val('a_r'), phone: val('a_p'), email, hub: slugUser(val('a_hub')), rooms: $$('.a_room:checked').map(c => c.value), clearances: {...(a.clearances || {}), child_abuse: val('a_c1')}, training_exp: val('a_tx')});
+    const pw = ($('#a_pw') || {}).value || '';
+    const commit = () => { const i = DB.adults.findIndex(x => x.id === a.id); if (i >= 0) DB.adults[i] = a; else DB.adults.push(a); };
+    if (!live || (!a.hub && !email && !pw)) { commit(); toast('Saved'); return true; }
+    const btn = document.querySelector('.modal [data-act="save"]'); if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; } adultErr('');
+    eduAccount(a, pw).then(res => {
+      if (!res.ok) { adultErr(res.msg); if (btn) { btn.disabled = false; btn.textContent = 'Save'; } return; }
+      commit(); persist(); closeModal(); render(); toast(res.msg);
+    });
+    return false; });
+  if (live && a.hub) eduAccountInfo(a.hub).then(t => { const el = $('#a_acct'); if (el && t) el.innerHTML = t; });
+}
+const slugUser = v => String(v || '').trim().toLowerCase().replace(/[^a-z0-9._-]/g, '');
+const suggestUser = name => { const w = String(name || '').trim().toLowerCase().replace(/[^a-z\s]/g, '').split(/\s+/).filter(Boolean); return w.length > 1 ? w[0][0] + w[w.length - 1] : (w[0] || ''); };
+function adultErr(t) { const el = $('#a_err'); if (el) el.textContent = t; }
+/* DELC Apps hub accounts (hub_users) — same table and password scheme as the Admin Portal */
+const hubHdr = extra => Object.assign({}, DelcAuth.restHeaders(), extra || {});
+async function hubFind(field, v) {
+  if (!v) return null; const q = field === 'email' ? 'email=ilike.' + encodeURIComponent(v.replace(/[%_*]/g, '')) : 'username=eq.' + encodeURIComponent(v);
+  const r = await fetch(`${DelcAuth.SUPABASE_URL}/rest/v1/hub_users?${q}&select=id,username,email,display_name,allowed_apps,is_admin`, {headers: hubHdr()});
+  if (!r.ok) throw new Error('lookup ' + r.status); const L = await r.json(); return L[0] || null;
+}
+async function eduAccountInfo(hub) {
+  try { const u = await hubFind('username', hub); if (!u) return `<span style="color:var(--warn)">No DELC Apps account named <b>${esc(hub)}</b> yet — enter a password to create it.</span>`;
+    const has = (u.allowed_apps || []).includes('education') || u.is_admin;
+    return `✅ Has a DELC Apps login (<b>${esc(u.username)}</b>${u.email ? ' · ' + esc(u.email) : ''})${has ? ' with delcEDUCATION access' : ' — delcEDUCATION access will be added when you save'}.${Live.sess && Live.sess.isAdmin ? ' Type a new password only to reset it.' : ''}`;
+  } catch (_) { return 'Couldn’t check the DELC Apps account right now.'; }
+}
+/* Create or link the adult's DELC Apps login and give it delcEDUCATION access. The password is never stored in delcEDUCATION. */
+async function eduAccount(a, pw) {
+  try {
+    let u = a.hub ? await hubFind('username', a.hub) : null;
+    if (!u && a.email) { u = await hubFind('email', a.email); if (u && a.hub && u.username !== a.hub && pw) u = null; }
+    if (u) {
+      a.hub = u.username; const apps = Array.isArray(u.allowed_apps) ? u.allowed_apps.slice() : [];
+      const body = {updated_at: new Date().toISOString()}; let reset = false;
+      if (!apps.includes('education')) body.allowed_apps = apps.concat('education');
+      if (!u.email && a.email) body.email = a.email;
+      if (pw) { if (!(Live.sess && Live.sess.isAdmin)) return {ok: false, msg: `${u.username} already has a login. Only a DELC Apps admin can reset a password — leave the password blank, or ask in the Admin Portal.`};
+        if (u.is_admin && !isSuper(Live.sess) && u.username !== Live.sess.username) return {ok: false, msg: `${u.username} is a DELC Apps admin. Reset that password in the Admin Portal.`};
+        if (pw.length < 6) return {ok: false, msg: 'Use at least 6 characters for the password.'};
+        body.salt = DelcAuth.genSalt(); body.password_hash = await DelcAuth.hashPassword(pw, body.salt); reset = true; }
+      const r = await fetch(`${DelcAuth.SUPABASE_URL}/rest/v1/hub_users?id=eq.${encodeURIComponent(u.id)}`, {method: 'PATCH', headers: hubHdr({Prefer: 'return=minimal'}), body: JSON.stringify(body)});
+      if (!r.ok) return {ok: false, msg: 'Couldn’t update the DELC Apps account (' + r.status + ').'};
+      return {ok: true, msg: reset ? `Saved · password reset for ${u.username}` : body.allowed_apps ? `Saved · ${u.username} can now open delcEDUCATION` : 'Saved'};
+    }
+    if (!a.hub) a.hub = suggestUser(a.name);
+    if (!a.hub) return {ok: false, msg: 'Enter a username for their DELC Apps login.'};
+    if (!pw) return {ok: false, msg: `There’s no DELC Apps account named “${a.hub}” yet. Enter a password to create it, or clear the username and email to save without a login.`};
+    if (pw.length < 6) return {ok: false, msg: 'Use at least 6 characters for the password.'};
+    const salt = DelcAuth.genSalt();
+    const row = {id: 'u_' + a.hub + '_' + Math.random().toString(36).slice(2, 8), username: a.hub, email: a.email || '', display_name: a.name, allowed_apps: ['education'], is_admin: false, salt, password_hash: await DelcAuth.hashPassword(pw, salt), updated_at: new Date().toISOString()};
+    const r = await fetch(`${DelcAuth.SUPABASE_URL}/rest/v1/hub_users`, {method: 'POST', headers: hubHdr({Prefer: 'return=minimal'}), body: JSON.stringify(row)});
+    if (!r.ok) { const t = await r.text(); return {ok: false, msg: /duplicate|23505/.test(t) ? `The username “${a.hub}” is already taken — try another.` : 'Couldn’t create the login (' + r.status + ').'}; }
+    return {ok: true, msg: `Saved · login created for ${a.hub}`};
+  } catch (e) { return {ok: false, msg: 'Couldn’t reach the DELC Apps accounts. Check the connection and try again.'}; }
+}
+function roomModal(r) { const isNew = !r; r = r || {id: 'r' + uid(), name: '', ages: '', color: '#1d6fa5'}; openModal(() => `${head(isNew ? 'Add a class' : 'Edit class')}<div class="stack"><label class="f" for="r_n">Class name<input id="r_n" value="${esc(r.name)}" placeholder="e.g. Confirmation Class"></label><label class="f" for="r_a">Ages or grades<input id="r_a" value="${esc(r.ages)}"></label><label class="f" for="r_p">Meets in (from delcFACILITIES)<select id="r_p"><option value="">— pick a room —</option>${[...new Set([...FAC_ROOMS, placeOf(r)].filter(Boolean))].map(x => `<option ${x === placeOf(r) ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></label><label class="f" for="r_c">Color<input id="r_c" type="color" value="${esc(r.color)}" style="height:42px;padding:4px"></label></div>${foot(isNew ? 'Add class' : 'Save', isNew ? '' : `<button class="btn danger" data-act="roomDel" data-id="${r.id}">Delete class</button>`)}`, () => { if (!val('r_n')) { toast('Enter a name'); return false; } Object.assign(r, {name: val('r_n'), ages: val('r_a'), color: val('r_c'), place: val('r_p')}); if (isNew) DB.rooms.push(r); return true; }); }
+
+/* ======== actions ======== */
+let toastT; function toast(t) { let el = $('.toast'); if (!el) { el = document.createElement('div'); el.className = 'toast'; el.setAttribute('role', 'status'); document.body.appendChild(el); } el.textContent = t; clearTimeout(toastT); toastT = setTimeout(() => el.remove(), 2400); }
+const A = {
+  tab: d => { S.tab = d.v; S.student = null; render(); scrollTo(0, 0); },
+  room: d => { S.room = d.v; render(); },
+  roomF: d => { S.roomF = d.v; render(); },
+  day: d => { S.date = addDays(S.date, +d.v); render(); },
+  checkin: d => { const s = ensureSession(S.date, S.room); const k = kid(d.id); s.att[d.id] = {in: nowT(), by: k.guardians[0] ? k.guardians[0].name : ''}; persist(); render(); },
+  allin: () => { const s = ensureSession(S.date, S.room); DB.students.filter(k => k.room_id === S.room && k.active !== false).forEach(k => { if (!s.att[k.id]) s.att[k.id] = {in: nowT(), by: k.guardians[0] ? k.guardians[0].name : ''}; }); persist(); render(); toast('Everyone checked in — uncheck anyone who isn’t here'); },
+  checkout: d => checkoutModal(kid(d.id)),
+  pickup: d => { const k = S.modal && kid(($('.modal h2').textContent || '').replace('Check out ', '')) ; },
+  undo: d => { const s = ensureSession(S.date, S.room); s.att[d.id] = {...s.att[d.id], out: '', to: ''}; persist(); render(); },
+  visitor: () => visitorModal(),
+  lessonEdit: () => lessonModal(),
+  planEdit: () => planModal(),
+  planDel: () => { ensureSession(S.date, S.room).plan = null; persist(); closeModal(); render(); },
+  adultAdd: () => adultAddModal(),
+  adultPick: d => { const s = ensureSession(S.date, S.room); s.adults = [...(s.adults || []), d.id]; persist(); render(); adultAddModal(); },
+  adultRm: d => { const s = ensureSession(S.date, S.room); s.adults = s.adults.filter(x => x !== d.id); persist(); render(); },
+  issueNew: () => issueModal(null),
+  issueEdit: d => issueModal(DB.issues.find(i => i.id === d.id)),
+  issueDel: () => { const i = S.modal.issue; DB.issues = DB.issues.filter(x => x !== i); persist(); closeModal(); render(); toast('Deleted'); },
+  profile: d => { S.student = d.id; render(); scrollTo(0, 0); },
+  back: () => { S.student = null; render(); },
+  studentNew: () => studentModal(null),
+  studentEdit: d => studentModal(kid(d.id)),
+  addPerson: d => { grabStudent(); const x = S.modal.k; (d.v === 'gd' ? x.guardians : x.pickups).push({name: '', rel: d.v === 'gd' ? 'Parent' : '', phone: ''}); renderModal(); },
+  adultNew: () => adultModal(null), adultEdit: d => adultModal(adult(d.id)),
+  pwShow: () => { const i = $('#a_pw'), b = document.querySelector('[data-act="pwShow"]'); if (!i) return; i.type = i.type === 'password' ? 'text' : 'password'; if (b) b.textContent = i.type === 'password' ? 'Show' : 'Hide'; },
+  roomNew: () => roomModal(null), roomEdit: d => roomModal(room(d.id)),
+  roomDel: d => { const r = DB.rooms.find(x => x.id === d.id); if (!r) return; if (DB.rooms.length < 2) { toast('Keep at least one class — add the new one first, then delete this one'); return; }
+    const kids = DB.students.filter(k => k.room_id === r.id && k.active !== false); const ads = DB.adults.filter(a => (a.rooms || []).includes(r.id)); const others = DB.rooms.filter(x => x.id !== r.id);
+    const up = DB.schedule.filter(p => p.room_id === r.id && p.date >= TODAY).length;
+    openModal(() => `${head('Delete ' + esc(r.name) + '?')}<div class="stack"><div class="notice warn">⚠️ <div>This class comes off the Sunday screen, calendar and reports from now on. <b>Past attendance, lessons and issues are kept</b> and still show the class name.</div></div>
+      ${kids.length ? `<label class="f" for="rd_to">Move its ${plural(kids.length, 'student')} to<select id="rd_to">${others.map(x => `<option value="${x.id}">${esc(x.name)}</option>`).join('')}</select></label>` : '<div class="small muted">No students are in this class.</div>'}
+      <ul class="small" style="margin:0;padding-left:18px">${ads.length ? `<li>${plural(ads.length, 'teacher')} will be taken off it: ${ads.map(a => esc(a.name)).join(', ')}</li>` : ''}${up ? `<li>${plural(up, 'upcoming Sunday')} on the calendar for this class will be cleared</li>` : ''}</ul></div>
+      ${foot('Delete class')}`, () => {
+      const to = kids.length ? val('rd_to') : null; kids.forEach(k => { k.room_id = to; });
+      DB.adults.forEach(a => { if ((a.rooms || []).includes(r.id)) a.rooms = a.rooms.filter(x => x !== r.id); });
+      DB.schedule = DB.schedule.filter(p => !(p.room_id === r.id && p.date >= TODAY)); DB.schedule.forEach(p => { if (p.merge_into === r.id && p.date >= TODAY) p.merge_into = null; });
+      DB.rooms = DB.rooms.filter(x => x.id !== r.id); DB.oldrooms = [...(DB.oldrooms || []).filter(x => x.id !== r.id), {...r, deleted_at: TODAY}];
+      if (S.room === r.id) S.room = DB.rooms[0].id; if (S.roomF === r.id) S.roomF = 'all'; toast(r.name + ' deleted' + (kids.length ? ' — students moved to ' + room(to).name : '')); return true; }); },
+  openDay: d => { S.date = d.d; S.room = d.r; S.tab = 'today'; render(); scrollTo(0, 0); },
+  copy: () => { const t = $('#sumtxt'); const done = () => toast('Copied'); try { navigator.clipboard.writeText(t.value).then(done, () => { t.select(); toast('Selected — press Ctrl+C'); }); } catch (_) { t.select(); toast('Selected — press Ctrl+C'); } },
+  planEdit: d => planModal2(d.d, d.r),
+  planMode: d => { grabPlan(); const p = S.modal.plan; if (d.v === 'normal') { p.merge_into = null; p.cancelled = false; } if (d.v === 'merge') { p.cancelled = false; p.merge_into = p.merge_into || DB.rooms.find(x => x.id !== p.room_id).id; } if (d.v === 'cancel') { p.cancelled = true; p.merge_into = null; } S.modal.focus = false; renderModal(); },
+  calMove: d => { S.calFrom = addDays(S.calFrom, +d.v); render(); },
+  signSched: () => { const s = ensureSession(S.date, S.room); s.adults = [...new Set([...(s.adults || []), ...planFor(S.date, S.room).adults])]; persist(); render(); },
+  sendBoard: () => sendSummary(S.monthOf),
+  close: () => closeModal(),
+  bg: (d, e) => { if (e.target.classList.contains('mbg') && downOn === e.target) closeModal(); },
+  save: () => { const m = S.modal; if (m && m.onSave && m.onSave() !== false) { persist(); closeModal(); render(); } },
+  reset: () => { if (S.confirmReset) { DB = seed(); persist(); S.confirmReset = false; S.student = null; render(); toast('Demo reset'); } else { S.confirmReset = true; toast('Tap “Reset demo” again to start over'); setTimeout(() => { S.confirmReset = false; }, 4000); } }
+};
+/* pickup chips act on the open check-out window */
+A.pickup = d => { const name = d.v; const k = S.modal && S.modal.kid; if (!k) return; doCheckout(k, name, false); persist(); closeModal(); render(); toast(k.first + ' checked out to ' + name); };
+const _co = checkoutModal; checkoutModal = k => { _co(k); S.modal.kid = k; };
+let downOn = null; document.addEventListener('mousedown', e => { downOn = e.target; }, true); document.addEventListener('touchstart', e => { downOn = e.target; }, true);
+document.addEventListener('click', e => { const el = e.target.closest('[data-act]'); if (!el) return; const f = A[el.dataset.act]; if (f) { if (el.tagName === 'A') e.preventDefault(); f(el.dataset, e); } });
+document.addEventListener('input', e => { if (e.target.dataset.inp === 'q') { S.q = e.target.value; const pos = e.target.selectionStart; render(); const q = $('#q'); if (q) { q.focus(); q.setSelectionRange(pos, pos); } } });
+document.addEventListener('change', e => { const c = e.target.dataset.chg; if (c === 'as') { S.as = e.target.value; S.student = null; render(); } if (c === 'month') { S.monthOf = e.target.value; render(); } if (c === 'copyLesson') { const x = DB.sessions.find(s => s.id === e.target.value); if (x) { $('#l_t').value = x.lesson.title; $('#l_s').value = x.lesson.scripture || ''; $('#l_d').value = x.lesson.summary || ''; } } });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && S.modal) closeModal(); });
+
+
+
+
+
+/* ======== live backend (Supabase) + DELC Apps hub sign-in ========
+   LIVE_CFG is null in the demo. The GitHub build sets it, and the app then:
+   - signs in with the DELC Apps hub account (shared-auth.js), single sign-on from the hub
+   - loads every record from one table (<app>_records: id, kind, pos, data) and saves only what changed
+   - checks for other people's changes every 30 seconds and when the tab comes back */
+/* Super admins: these DELC Apps usernames always see every part of delcEDUCATION and delcPEOPLE (director / Mutual Ministry view). */
+const SUPER_ADMINS = ['ddetrich'];
+const isSuper = sess => !!sess && SUPER_ADMINS.includes(String(sess.username || '').toLowerCase());
+const Live = {
+  on: false, sess: null, last: {}, t: null, pending: false, busy: false, err: '', meId: null,
+  hdr(extra) { return Object.assign({apikey: LIVE_CFG.key, Authorization: 'Bearer ' + LIVE_CFG.key, 'Content-Type': 'application/json'}, extra || {}); },
+  rowId(kind, x) { return kind + ':' + LIVE_CFG.keyOf(kind, x); },
+  async fetchAll() {
+    const r = await fetch(`${LIVE_CFG.url}/rest/v1/${LIVE_CFG.table}?select=id,kind,pos,data&order=pos.asc&limit=20000`, {headers: this.hdr()});
+    if (!r.ok) throw new Error('Could not load (' + r.status + ')'); return r.json();
+  },
+  build(L) { const db = {}; LIVE_CFG.kinds.forEach(k => db[k] = []); L.forEach(r => { if (db[r.kind]) db[r.kind].push(r.data); }); return LIVE_CFG.implode ? LIVE_CFG.implode(db) : db; },
+  snap(L) { const m = {}; L.forEach(r => { m[r.id] = r.pos + '|' + JSON.stringify(r.data); }); return m; },
+  rows(db) { const out = {}; if (LIVE_CFG.explode) db = LIVE_CFG.explode(db); LIVE_CFG.kinds.forEach(k => (db[k] || []).forEach((x, i) => { out[this.rowId(k, x)] = {id: this.rowId(k, x), kind: k, pos: i, data: x}; })); return out; },
+  async load() { const L = await this.fetchAll(); this.last = this.snap(L); return this.build(L); },
+  queue() { this.pending = true; this.badge('Saving…'); clearTimeout(this.t); this.t = setTimeout(() => this.flush(), 600); },
+  async flush() {
+    if (this.busy) { this.queue(); return; } this.busy = true;
+    try {
+      const now = this.rows(DB); const up = [], gone = [];
+      Object.values(now).forEach(r => { if (this.last[r.id] !== r.pos + '|' + JSON.stringify(r.data)) up.push(r); });
+      Object.keys(this.last).forEach(id => { if (!now[id]) gone.push(id); });
+      if (LIVE_CFG.merge && up.length) await LIVE_CFG.merge(up, this);
+      const by = this.sess ? this.sess.username : 'unknown'; const at = new Date().toISOString();
+      for (let i = 0; i < up.length; i += 200) {
+        const chunk = up.slice(i, i + 200).map(r => ({id: r.id, kind: r.kind, pos: r.pos, data: r.data, updated_at: at, updated_by: by}));
+        const res = await fetch(`${LIVE_CFG.url}/rest/v1/${LIVE_CFG.table}`, {method: 'POST', headers: this.hdr({Prefer: 'resolution=merge-duplicates,return=minimal'}), body: JSON.stringify(chunk)});
+        if (!res.ok) throw new Error('save ' + res.status + ' ' + (await res.text()).slice(0, 120));
+      }
+      for (let i = 0; i < gone.length; i += 60) {
+        const ids = gone.slice(i, i + 60).map(x => '"' + x.replace(/"/g, '') + '"').join(',');
+        const res = await fetch(`${LIVE_CFG.url}/rest/v1/${LIVE_CFG.table}?id=in.(${encodeURIComponent(ids)})`, {method: 'DELETE', headers: this.hdr({Prefer: 'return=minimal'})});
+        if (!res.ok) throw new Error('delete ' + res.status);
+      }
+      up.forEach(r => { this.last[r.id] = r.pos + '|' + JSON.stringify(r.data); }); gone.forEach(id => { delete this.last[id]; });
+      this.pending = false; this.err = ''; this.badge('Saved ✓', 1800);
+    } catch (e) { console.error(e); this.err = e.message || String(e); this.badge('Not saved — retrying…'); clearTimeout(this.t); this.t = setTimeout(() => this.flush(), 5000); }
+    finally { this.busy = false; }
+  },
+  async poll() {
+    if (!this.on || this.pending || this.busy || document.visibilityState !== 'visible' || S.modal) return;
+    try { const L = await this.fetchAll(); const m = this.snap(L); const a = Object.keys(m), b = Object.keys(this.last);
+      if (a.length === b.length && a.every(k => this.last[k] === m[k])) return;
+      if (this.pending || S.modal) return; this.last = m; const keep = LIVE_CFG.keep ? LIVE_CFG.keep(DB) : {}; DB = Object.assign(this.build(L), keep); if (LIVE_CFG.after) LIVE_CFG.after(); render();
+    } catch (_) {}
+  },
+  badge(txt, hide) { let el = document.getElementById('livebadge'); if (!el) { el = document.createElement('div'); el.id = 'livebadge'; document.body.appendChild(el); } el.textContent = txt; el.className = 'show' + (/Not saved/.test(txt) ? ' bad' : ''); clearTimeout(this._h); if (hide) this._h = setTimeout(() => { el.className = ''; }, hide); }
+};
+function liveCss() { document.head.insertAdjacentHTML('beforeend', `<style id="livecss">
+#livebadge{position:fixed;right:14px;bottom:14px;background:var(--navy);color:#fff;font-size:12.5px;font-weight:700;padding:6px 12px;border-radius:999px;opacity:0;transition:opacity .2s;z-index:90;pointer-events:none}#livebadge.show{opacity:.92}#livebadge.bad{background:var(--bad)}
+.gate{min-height:70vh;display:grid;place-items:center;padding:24px 16px}.gate .card{max-width:400px;width:100%;padding:24px}.gate h1{font-family:var(--display);margin:0 0 4px;font-size:26px}
+.gate .wm{display:inline-flex;background:var(--navy);color:#fff;border-radius:8px;padding:4px 12px;font-family:var(--display);font-weight:800;font-size:20px;margin-bottom:14px}.gate .wm b{color:var(--delc-green)}
+.gate .err{color:var(--bad);font-size:13px;min-height:18px;margin-top:6px}.whois{display:flex;align-items:center;gap:8px;color:#dfe6f2;font-size:13px;flex-wrap:wrap}.whois a,.whois button{color:#fff;background:rgba(255,255,255,.12);border:0;border-radius:8px;padding:5px 10px;font:inherit;font-weight:700;cursor:pointer;text-decoration:none}
+</style>`); }
+function liveGate(msg) {
+  const demo = document.querySelector('.demo'); if (demo) demo.hidden = true;
+  const who = document.querySelector('label.who'); if (who) who.hidden = true; const tabs = document.getElementById('tabs'); if (tabs) tabs.innerHTML = '';
+  $('#app').innerHTML = `<div class="gate"><div class="card"><div class="wm">delc<b>${LIVE_CFG.suffix}</b></div><h1>Sign in</h1><div class="muted small" style="margin-bottom:12px">Use your DELC Apps account — the same username (or email) and password as the DELC Apps Hub.</div>
+    ${msg ? `<div class="notice warn" style="margin-bottom:10px">${msg}</div>` : ''}
+    <form id="gateform" class="stack"><label class="f" for="g_u">Username or email<input id="g_u" autocomplete="username" autocapitalize="off"></label><label class="f" for="g_p">Password<input id="g_p" type="password" autocomplete="current-password"></label>
+    <button class="btn gold" type="submit">Sign in</button><div class="err" id="g_err"></div></form>
+    <div class="tiny muted" style="margin-top:10px"><a href="${LIVE_CFG.hubUrl}">DELC Apps Hub</a></div></div></div>`;
+  $('#gateform').addEventListener('submit', async e => { e.preventDefault(); const u = $('#g_u').value.trim().toLowerCase(), p = $('#g_p').value; const er = m => { $('#g_err').textContent = m; };
+    if (!u || !p) return er('Enter your username (or email) and password.'); if (!window.DelcAuth) return er('The sign-in service didn’t load. Check the internet connection and reload.');
+    let un = u; if (u.includes('@')) { er('Signing in…'); try { const x = await hubFind('email', u); if (!x) return er('That username or password isn’t right.'); un = x.username; } catch (_) { return er('Could not reach the sign-in service.'); } }
+    er('Signing in…'); let res; try { res = await DelcAuth.login(un, p); } catch (_) { res = {ok: false, error: 'Could not reach the sign-in service.'}; }
+    if (!res || !res.ok) return er((res && res.error) || 'That username or password isn’t right.');
+    const s = res.session || DelcAuth.getSession(); if (!DelcAuth.hasAppAccess(s, LIVE_CFG.appKey)) return er(`Your account doesn’t have ${LIVE_CFG.appName} yet. Ask an admin to turn it on in the Admin Portal.`);
+    liveStart(s); });
+}
+async function liveStart(sess) {
+  Live.sess = sess; $('#app').innerHTML = '<div class="card empty" style="margin-top:20px">Loading…</div>';
+  try { DB = Object.assign(await Live.load(), LIVE_CFG.keep ? LIVE_CFG.keep({}) : {}); } catch (e) { $('#app').innerHTML = `<div class="card empty" style="margin-top:20px">Couldn’t reach the database: ${esc(e.message)}. <button class="btn sm" onclick="location.reload()">Try again</button></div>`; return; }
+  if (LIVE_CFG.firstRun) await LIVE_CFG.firstRun(sess);
+  const id = LIVE_CFG.identify(sess);
+  if (!id) { liveGate(`You’re signed in as <b>${esc(sess.displayName || sess.username)}</b>, but your username isn’t on a record in ${LIVE_CFG.appName} yet. ${LIVE_CFG.linkHelp}`); return; }
+  S.as = id.as; Live.meId = id.me || null; Live.on = true;
+  const demo = document.querySelector('.demo'); if (demo) demo.hidden = true;
+  const who = document.querySelector('label.who'); if (who) { who.hidden = false; who.outerHTML = `<div class="whois"><span>👤 ${esc(sess.displayName || sess.username)}${id.super ? ' <span style="background:var(--delc-green);color:#13240a;border-radius:6px;padding:1px 6px;font-size:11px;font-weight:800">Super admin</span>' : ''}</span><a href="${LIVE_CFG.hubUrl}">Apps</a><button type="button" id="liveout">Sign out</button></div>`; }
+  const out = document.getElementById('liveout'); if (out) out.addEventListener('click', () => { if (!confirm('Sign out? This also signs you out of the DELC Apps Hub on this device.')) return; try { DelcAuth.clearSession(); } catch (_) {} location.reload(); });
+  if (LIVE_CFG.after) LIVE_CFG.after(); render(); if (LIVE_CFG.started) LIVE_CFG.started();
+  setInterval(() => Live.poll(), 30000); document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') Live.poll(); });
+  window.addEventListener('beforeunload', e => { if (Live.pending) { e.preventDefault(); e.returnValue = ''; } });
+}
+async function liveBoot(demoInit) {
+  if (!LIVE_CFG || /[?&]demo\b/.test(location.search)) { demoInit(); return; }
+  liveCss(); let s = null; try { s = window.DelcAuth && DelcAuth.getSession(); } catch (_) {}
+  if (s && DelcAuth.refreshSession) { try { await DelcAuth.refreshSession(); s = DelcAuth.getSession(); } catch (_) {} }
+  if (s && DelcAuth.hasAppAccess(s, LIVE_CFG.appKey)) liveStart(s); else liveGate(s ? `You’re signed in to the hub as <b>${esc(s.username)}</b>, but that account doesn’t have ${LIVE_CFG.appName}. Ask an admin to turn it on, or sign in as someone else.` : '');
+}
+/* ---- delcEDUCATION live settings (the GitHub build fills in https://ksdxhqyusaylfpyeecbv.supabase.co/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtzZHhocXl1c2F5bGZweWVlY2J2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1NTE1NDgsImV4cCI6MjEwNDEyNzU0OH0.6HI0XWmlIfzyVy0iRH2GkAVNqYIZQwMeNhr4drTOUNo; the demo leaves LIVE_CFG null) ---- */
+const LIVE_CFG = 'https://ksdxhqyusaylfpyeecbv.supabase.co'.startsWith('http') ? {
+  url: 'https://ksdxhqyusaylfpyeecbv.supabase.co', key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtzZHhocXl1c2F5bGZweWVlY2J2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1NTE1NDgsImV4cCI6MjEwNDEyNzU0OH0.6HI0XWmlIfzyVy0iRH2GkAVNqYIZQwMeNhr4drTOUNo', appKey: 'education', appName: 'delcEDUCATION', suffix: 'EDUCATION', table: 'edu_records', hubUrl: 'https://delcdata.github.io/DELCAppsHub/',
+  kinds: ['rooms', 'students', 'adults', 'sessions', 'issues', 'schedule', 'oldrooms'],
+  keyOf: (k, x) => x.id || ((x.date || '') + '|' + (x.room_id || '')),
+  keep: () => ({church: (DB && DB.church) || {}, v: 3}),
+  linkHelp: 'Ask the Christian Education director to add your DELC Apps username to your record under <b>Adults &amp; clearances</b>.',
+  identify(sess) { const u = String(sess.username || '').toLowerCase(); const a = DB.adults.find(x => String(x.hub || '').toLowerCase() === u);
+    if (isSuper(sess)) return {as: 'director', me: a ? a.id : null, super: true};
+    if (a && a.role === 'Director') return {as: 'director', me: a.id}; if (a) return {as: a.id, me: a.id};
+    /* a hub admin with no record is only the director until a real Director is linked (first setup) */
+    if (sess.isAdmin && !DB.adults.some(x => x.role === 'Director' && x.hub)) return {as: 'director'}; return null; },
+  async firstRun(sess) { if (DB.rooms.length || !sess.isAdmin) return; DB.rooms = [{id: 'kk', name: "Kid's Korner", ages: 'Ages 3–5', color: '#C8973A', place: 'Kids Korner - Nursery/Pre-K'}, {id: 'cc', name: "Children's Room", ages: 'K – 2nd grade', color: '#2F80ED', place: 'Kids Korner - Elementary'}, {id: 'ss', name: 'Sunday School', ages: '3rd – 6th grade', color: '#1a6e3c', place: 'Kids Korner - Elementary'}, {id: 'yg', name: 'Youth Group', ages: '7th – 12th grade', color: '#7e3a8a', place: 'Kids Korner - Youth'}]; await Live.flush(); },
+  after() { EDU_LIVE = {url: LIVE_CFG.url, key: LIVE_CFG.key}; },
+  started() { S.tab = isDirector() ? 'dash' : 'today'; render(); loadChurchKids(); loadFacRooms(); }
+} : null;
+const _persistDemo = persist;
+persist = function () { if (Live.on) { MEMORY = DB; Live.queue(); clearTimeout(sendT); sendT = setTimeout(() => sendSummary(TODAY.slice(0, 7), true), 4000); return; } if (LIVE_CFG && !Live.on) return; _persistDemo(); };
+const _renderWhoDemo = renderWho; renderWho = function () { if (Live.on) return; _renderWhoDemo(); };
+const _viewDashLive = viewDash;
+viewDash = function () { const h = _viewDashLive(); if (!Live.on || DB.adults.length) return h; return `<div class="notice info" style="margin-bottom:12px"><b>Getting started:</b> add the teachers and helpers under <b>Adults &amp; clearances</b> with their rooms, clearance dates and DELC Apps username (that’s how they sign in and see only their rooms — set the director’s role to <b>Director</b>). Then add the children under <b>Student profiles</b>. <button class="btn sm gold" data-act="tab" data-v="adults" style="margin-left:6px">Add adults</button></div>` + h; };
+
+
+/* ======== Weeknight classes (Derek, 2026-11-09): classes like JAM that meet on another night, weekly / certain weeks of the month / picked dates ======== */
+const WDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const NTH = ['1st', '2nd', '3rd', '4th', '5th'];
+const isWeeknight = r => !!(r && r.meets && (r.meets.mode === 'dates' || (+r.meets.day || 0) !== 0));
+const isWeeknightId = id => isWeeknight(room(id));
+const sundayRooms = () => DB.rooms.filter(r => !isWeeknight(r));
+const weekRooms = () => DB.rooms.filter(isWeeknight);
+const nthOf = d => Math.floor((dOf(d).getDate() - 1) / 7) + 1;
+function meetsOn(r, d) {
+  const m = r.meets || {}; if (m.mode === 'dates') return (m.dates || []).includes(d);
+  const dt = dOf(d); if (dt.getDay() !== (+m.day || 0)) return false;
+  return m.mode !== 'nth' || !(m.weeks || []).length || m.weeks.includes(nthOf(d));
+}
+function meetDates(r, from, to) { const L = []; if (r.meets && r.meets.mode === 'dates') return (r.meets.dates || []).filter(d => d >= from && d <= to).sort(); for (let d = from; d <= to; d = addDays(d, 1)) if (meetsOn(r, d)) L.push(d); return L; }
+function prevMeet(r, d) { if (r.meets && r.meets.mode === 'dates') { const L = (r.meets.dates || []).filter(x => x <= d).sort(); return L[L.length - 1] || null; } for (let i = 0; i < 400; i++) { const x = addDays(d, -i); if (meetsOn(r, x)) return x; } return null; }
+function nextMeet(r, d) { if (r.meets && r.meets.mode === 'dates') return (r.meets.dates || []).filter(x => x > d).sort()[0] || null; for (let i = 1; i < 400; i++) { const x = addDays(d, i); if (meetsOn(r, x)) return x; } return null; }
+function meetsLabel(r) {
+  const m = r.meets || {}; const t = m.time ? ' · ' + m.time : '';
+  if (!isWeeknight(r)) return 'Sundays' + t;
+  if (m.mode === 'dates') { const up = (m.dates || []).filter(d => d >= TODAY).sort(); return (up.length ? 'Next: ' + up.slice(0, 3).map(d => fmt(d, {weekday: 'short', month: 'short', day: 'numeric'})).join(', ') : 'No dates set') + t; }
+  const day = WDAYS[+m.day || 0]; const w = m.mode === 'nth' ? (m.weeks || []).slice().sort() : [];
+  return (w.length ? w.map(n => NTH[n - 1]).join(' & ') + ' ' + day + ' of the month' : 'Every ' + day) + t;
+}
+const dayShort = r => isWeeknight(r) ? (r.meets.mode === 'dates' ? 'dates' : WDAYS[+r.meets.day].slice(0, 3)) : '';
+/* the right date to open a class on: a weeknight class goes to its latest meeting (or the next one) */
+function dateFor(r) { if (!isWeeknight(r)) return S.sunDate || lastSunday(TODAY); return prevMeet(r, TODAY) || nextMeet(r, TODAY) || TODAY; }
+function fixDate() { const r = room(S.room); if (isWeeknight(r)) { if (!meetsOn(r, S.date) && !session(S.date, r.id)) S.date = dateFor(r); } else if (dOf(S.date).getDay() !== 0) S.date = S.sunDate || lastSunday(TODAY); }
+
+/* class chips show the weeknight day */
+const _roomChipsW = roomChips;
+roomChips = function (sel, act, all) { return _roomChipsW(sel, act, all).replace(/data-v="([^"]+)"><span class="dot"([^>]*)><\/span>([^<]*)<\/button>/g, (m, id, st, nm) => { const r = DB.rooms.find(x => x.id === id); return r && isWeeknight(r) ? `data-v="${id}"><span class="dot"${st}></span>${nm} <span class="tiny" style="opacity:.75">· ${esc(dayShort(r))}</span></button>` : m; }); };
+
+/* tabs: “Class day” / “Calendar” once there is a weeknight class */
+const _renderTabsW = renderTabs;
+renderTabs = function () { _renderTabsW(); if (!myRooms().some(isWeeknight)) return; const t = $('#tabs'); t.querySelectorAll('button').forEach(b => { if (b.dataset.v === 'today') b.textContent = 'Class day'; if (b.dataset.v === 'cal') b.textContent = isDirector() ? 'Calendar' : 'My schedule'; }); };
+
+/* class day screen */
+const _viewTodayW = viewToday;
+viewToday = function () {
+  fixDate(); const r = room(S.room); let h = _viewTodayW();
+  if (!isWeeknight(r)) return h;
+  const pv = prevMeet(r, addDays(S.date, -1)), nx = nextMeet(r, S.date); const on = meetsOn(r, S.date);
+  h = h.replace('aria-label="Previous Sunday"', `aria-label="Previous class" ${pv ? '' : 'disabled'}`).replace('aria-label="Next Sunday"', `aria-label="Next class" ${nx ? '' : 'disabled'}`)
+    .replace('You’re looking at a past Sunday.', 'You’re looking at a past class.').replace('No students in this room yet.', 'No one on this class list yet — use <b>+ Add kids</b> to add children who come.');
+  h = h.replace(`<span class="muted">${esc(r.ages)}</span>`, `<span class="muted">${esc(r.ages)}</span><span class="chip info">📅 ${esc(meetsLabel(r))}</span>`);
+  if (!on) h = h.replace('<div class="stats">', `<div class="notice warn" style="margin-bottom:12px">📅 <div>${esc(r.name)} doesn’t usually meet on ${fmt(S.date, {weekday: 'long', month: 'short', day: 'numeric'})}. ${nx ? `<button class="btn sm" data-act="wnGo" data-d="${nx}" style="margin-left:6px">Go to the next class (${fmt(nx, {month: 'short', day: 'numeric'})})</button>` : ''}</div></div><div class="stats">`);
+  return h.replace('<button class="btn sm gold" data-act="visitor">+ Visitor</button>', '<button class="btn sm" data-act="rosterEdit">+ Add kids</button><button class="btn sm gold" data-act="visitor">+ Visitor</button>');
+};
+
+/* calendar: Sunday grid for Sunday classes, then a list for each weeknight class */
+const _viewCalW = viewCal;
+viewCal = function () {
+  const all = DB.rooms; const W = (isDirector() ? weekRooms() : myRooms().filter(isWeeknight));
+  let h; try { DB.rooms = sundayRooms(); h = _viewCalW(); } finally { DB.rooms = all; }
+  if (!sundayRooms().length || (!isDirector() && !myRooms().some(r => !isWeeknight(r)))) h = h.replace(/<div class="card scroll"[\s\S]*$/, '');
+  if (!W.length) return h;
+  const to = addDays(S.calFrom, 55); const dir = isDirector(); const me = meAdult();
+  const cards = W.map(r => { const D = meetDates(r, S.calFrom, to);
+    const rows = D.map(d => { const p = planFor(d, r.id); const st = planState(p); const names = p.adults.map(id => { const a = adult(id); return a ? `<span style="${me && a.id === me.id ? 'font-weight:800' : ''}">${esc(a.name)}</span>` : ''; }).filter(Boolean).join(', ');
+      return `<div class="list-item ${dir ? 'click' : ''}" ${dir ? `data-act="planEdit" data-d="${d}" data-r="${r.id}" style="cursor:pointer"` : ''}><span class="row" style="gap:8px"><b style="min-width:92px">${fmt(d, {weekday: 'short', month: 'short', day: 'numeric'})}</b><span class="tiny muted">${p.cancelled ? esc(p.note || '') : names || 'Nobody scheduled'}${!p.cancelled && p.note ? ' · ' + esc(p.note) : ''}</span></span><span class="chip ${st.cls}">${esc(st.txt)}</span></div>`; }).join('');
+    return `<section class="card" style="margin-top:14px"><div class="sec"><h2><span class="dot" style="background:${r.color}"></span> ${esc(r.name)}</h2><span class="tiny muted">${esc(meetsLabel(r))}</span></div>${rows || '<div class="small muted">No classes in these 8 weeks.</div>'}</section>`; }).join('');
+  return h + `<div class="hsecw" style="margin-top:18px;font-weight:800;color:var(--navy)">Weeknight classes</div>${cards}`;
+};
+
+/* schedule window: weeknight classes can’t merge into a Sunday room */
+const _planModal2W = planModal2;
+planModal2 = function (date, rid) {
+  _planModal2W(date, rid); const html = S.modal.html; const wk = isWeeknightId(rid);
+  S.modal.html = () => { let h = html().replace('aria-label="This Sunday"', 'aria-label="This class"').replace('<span>Teaching this Sunday</span>', `<span>Teaching ${wk ? 'this class' : 'this Sunday'}</span>`);
+    if (wk) h = h.replace(/<button class="chipbtn[^"]*" data-act="planMode" data-v="merge">Merge into another room<\/button>/, ''); return h; };
+  renderModal();
+};
+
+/* dashboard: Sunday numbers stay Sunday-only; weeknight classes get their own card */
+const _viewDashW = viewDash;
+viewDash = function () {
+  const all = DB.rooms; let h; try { DB.rooms = sundayRooms(); h = _viewDashW(); } finally { DB.rooms = all; }
+  const W = weekRooms(); if (!W.length) return h;
+  const rows = W.map(r => { const last = prevMeet(r, TODAY); const ls = last && session(last, r.id); const n = ls ? Object.values(ls.att).filter(a => a.in).length : null; const nx = nextMeet(r, TODAY); const p = nx && planFor(nx, r.id); const st = p && planState(p);
+    return `<div class="list-item"><span class="row" style="gap:6px"><span class="dot" style="background:${r.color}"></span><b>${esc(r.name)}</b><span class="tiny muted">${esc(meetsLabel(r))}</span></span><span class="row" style="gap:6px">${last ? `<button class="btn sm ghost" data-act="openDay" data-d="${last}" data-r="${r.id}">Last: ${fmt(last, {month: 'short', day: 'numeric'})} · ${n == null ? '—' : plural(n, 'kid')}</button>` : ''}${nx ? `<button class="btn sm" data-act="planEdit" data-d="${nx}" data-r="${r.id}">Next ${fmt(nx, {month: 'short', day: 'numeric'})}</button><span class="chip ${st.cls}">${esc(st.txt)}</span>` : '<span class="tiny muted">No upcoming date</span>'}</span></div>`; }).join('');
+  return h.replace('<div class="prof">', `<section class="card" style="margin-bottom:14px"><div class="sec"><h2>Weeknight classes</h2><button class="btn sm" data-act="tab" data-v="cal">Calendar</button></div>${rows}</section><div class="prof">`);
+};
+
+/* class editor: when it meets */
+roomModal = function (r) {
+  const isNew = !r; const x = r ? JSON.parse(JSON.stringify(r)) : {id: 'r' + uid(), name: '', ages: '', color: '#1d6fa5'};
+  x.meets = x.meets || {mode: 'weekly', day: 0, weeks: [], time: '', dates: []}; if (!x.meets.mode) x.meets.mode = 'weekly';
+  S.modal = {rx: x, html: () => { const m = S.modal.rx.meets; const wk = (+m.day || 0) !== 0 || m.mode === 'dates';
+    return `${head(isNew ? 'Add a class' : 'Edit class')}<div class="stack"><label class="f" for="r_n">Class name<input id="r_n" value="${esc(x.name)}" placeholder="e.g. JAM"></label><label class="f" for="r_a">Ages or grades<input id="r_a" value="${esc(x.ages)}"></label>
+      <label class="f" for="r_p">Meets in (from delcFACILITIES)<select id="r_p"><option value="">— pick a room —</option>${[...new Set([...FAC_ROOMS, placeOf(x)].filter(Boolean))].map(p => `<option ${p === placeOf(x) ? 'selected' : ''}>${esc(p)}</option>`).join('')}</select></label>
+      <div class="f"><span>When it meets</span><div class="rooms">${[['weekly', 'Every week'], ['nth', 'Certain weeks of the month'], ['dates', 'Pick the dates']].map(([k, l]) => `<button class="chipbtn ${m.mode === k ? 'on' : ''}" data-act="rmMode" data-v="${k}">${l}</button>`).join('')}</div></div>
+      ${m.mode !== 'dates' ? `<div class="grid2"><label class="f" for="r_day">Day<select id="r_day" data-chg="rmDay">${WDAYS.map((d, i) => `<option value="${i}" ${(+m.day || 0) === i ? 'selected' : ''}>${d}${i === 0 ? ' (Sunday school)' : ''}</option>`).join('')}</select></label><label class="f" for="r_t">Time<input id="r_t" value="${esc(m.time || '')}" placeholder="optional — e.g. 6:30 PM"></label></div>` : `<label class="f" for="r_t">Time <span class="tiny muted">(optional)</span><input id="r_t" value="${esc(m.time || '')}" placeholder="e.g. 6:30 PM"></label>`}
+      ${m.mode === 'nth' ? `<div class="f"><span>Which weeks</span><div class="rooms">${NTH.map((n, i) => `<label class="chipbtn" style="font-weight:600"><input type="checkbox" class="r_wk" value="${i + 1}" ${(m.weeks || []).includes(i + 1) ? 'checked' : ''}> ${n} ${WDAYS[+m.day || 0].slice(0, 3)}</label>`).join('')}</div></div>` : ''}
+      ${m.mode === 'dates' ? `<div class="f"><span>Dates</span><div class="row"><input id="r_dt" type="date" class="inp" style="max-width:190px"><button class="btn sm" data-act="rmDateAdd">+ Add date</button></div><div class="rooms" style="margin-top:6px">${(m.dates || []).slice().sort().map(d => `<span class="chipbtn" style="cursor:default">${fmt(d, {weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'})} <button class="btn sm ghost" data-act="rmDateRm" data-v="${d}" aria-label="Remove ${d}" style="padding:0 4px">×</button></span>`).join('') || '<span class="tiny muted">No dates yet.</span>'}</div></div>` : ''}
+      <div class="tiny muted">${wk ? 'A weeknight class has its own class day screen, calendar list and report line. Sunday numbers (kids at church vs. in a class) leave it out.' : 'Sunday classes show on the Sunday screen and Sunday calendar.'}</div>
+      <label class="f" for="r_c">Color<input id="r_c" type="color" value="${esc(x.color)}" style="height:42px;padding:4px"></label></div>${foot(isNew ? 'Add class' : 'Save', isNew ? '' : `<button class="btn danger" data-act="roomDel" data-id="${x.id}">Delete class</button>`)}`; },
+    onSave: () => { rmGrab(); const y = S.modal.rx; if (!y.name) { toast('Enter a name'); return false; } const m = y.meets;
+      if (m.mode === 'nth' && !(m.weeks || []).length) { toast('Pick which weeks of the month'); return false; }
+      if (m.mode === 'dates' && !(m.dates || []).length) { toast('Add at least one date'); return false; }
+      if (m.mode !== 'nth') m.weeks = []; if (m.mode !== 'dates') m.dates = []; if (m.mode === 'dates') m.day = null;
+      if (m.mode === 'weekly' && !(+m.day) && !m.time) delete y.meets;
+      const i = DB.rooms.findIndex(q => q.id === y.id); if (i >= 0) DB.rooms[i] = y; else DB.rooms.push(y);
+      if (isWeeknight(y) && S.room === y.id) S.date = dateFor(y); return true; }};
+  renderModal();
+};
+function rmGrab() { const y = S.modal && S.modal.rx; if (!y) return; const m = y.meets; if ($('#r_n')) Object.assign(y, {name: val('r_n'), ages: val('r_a'), color: val('r_c'), place: val('r_p')}); if ($('#r_day')) m.day = +val('r_day'); if ($('#r_t')) m.time = val('r_t'); if ($$('.r_wk').length) m.weeks = $$('.r_wk:checked').map(c => +c.value); }
+
+/* students: other classes a child comes to (e.g. a Sunday-school kid who also comes to JAM) */
+const inClass = (k, rid) => k.room_id === rid || (k.also || []).includes(rid);
+const _studentModalW = studentModal;
+studentModal = function (k) {
+  _studentModalW(k); const html = S.modal.html;
+  S.modal.html = () => { const x = S.modal.k; const others = DB.rooms.filter(r => r.id !== x.room_id); const box = others.length ? `<div class="f"><span>Also comes to <span class="tiny muted">(other classes, like a weeknight class)</span></span><div class="rooms">${others.map(r => `<label class="chipbtn" style="font-weight:600"><input type="checkbox" class="s_also" value="${r.id}" ${(x.also || []).includes(r.id) ? 'checked' : ''}> ${esc(r.name)}${isWeeknight(r) ? ' · ' + esc(dayShort(r)) : ''}</label>`).join('')}</div></div>` : '';
+    return html().replace(/(<div class="lbl" style="margin-top:6px">Parents \/ guardians)/, box + '$1'); };
+  renderModal();
+};
+const _grabStudentW = grabStudent;
+grabStudent = function () { _grabStudentW(); const x = S.modal.k; if ($$('.s_also').length || $('#s_r')) x.also = $$('.s_also:checked').map(c => c.value).filter(id => id !== x.room_id); };
+const _viewProfileW = viewProfile;
+viewProfile = function (k) { let h = _viewProfileW(k); if (!k || !(k.also || []).length) return h; const r = room(k.room_id); return h.replace(`<div class="muted">${esc(r.name)} · `, `<div class="muted">${esc(r.name)}${(k.also || []).map(id => ' + ' + esc(room(id).name)).join('')} · `); };
+/* the “Sundays” count on a profile only counts Sunday classes */
+const _statsW = stats;
+stats = function (k) { const s = _statsW(k); const here = DB.sessions.filter(x => x.att[k.id] && x.att[k.id].in && !isWeeknightId(x.room_id)).map(x => x.date).sort(); return {...s, n: new Set(here).size, last: here[here.length - 1] || s.last, here: new Set(here)}; };
+
+/* class list picker for a class */
+function rosterModal() {
+  const rid = S.room; const r = room(rid);
+  S.modal = {q: '', html: () => { const q = S.modal.q.toLowerCase(); const L = DB.students.filter(k => k.active !== false && k.room_id !== rid && (!q || kname(k).toLowerCase().includes(q))).sort((a, b) => a.first.localeCompare(b.first));
+    return `${head('Who comes to ' + esc(r.name) + '?')}<div class="stack"><input class="inp" id="rs_q" placeholder="Search by name" value="${esc(S.modal.q)}" data-inp="rsq"><div class="tiny muted">Check the children who come to ${esc(r.name)}. They stay in their Sunday class too.</div>
+      <div>${L.map(k => `<label class="list-item" style="cursor:pointer"><span class="row" style="gap:8px"><input type="checkbox" class="rs_k" value="${k.id}" ${(k.also || []).includes(rid) ? 'checked' : ''}><b>${esc(kname(k))}</b><span class="tiny muted">${esc(room(k.room_id).name)} · age ${ageOf(k.dob)}</span></span></label>`).join('') || '<div class="muted small">No children match. Use + Visitor to add a new child.</div>'}</div></div>${foot('Save list')}`; },
+    onSave: () => { rsGrab(); toast('Class list saved'); return true; }, focus: false};
+  renderModal();
+}
+function rsGrab() { const rid = S.room; $$('.rs_k').forEach(c => { const k = kid(c.value); if (!k) return; const a = new Set(k.also || []); if (c.checked) a.add(rid); else a.delete(rid); k.also = [...a]; }); }
+document.addEventListener('input', e => { if (e.target.dataset.inp === 'rsq' && S.modal) { rsGrab(); S.modal.q = e.target.value; const pos = e.target.selectionStart; renderModal(); const q = $('#rs_q'); if (q) { q.focus(); q.setSelectionRange(pos, pos); } } });
+document.addEventListener('change', e => { if (e.target.dataset.chg === 'rmDay' && S.modal && S.modal.rx) { rmGrab(); S.modal.focus = false; renderModal(); } });
+
+Object.assign(A, {
+  room: d => { const cur = room(S.room); if (!isWeeknight(cur) && dOf(S.date).getDay() === 0) S.sunDate = S.date; S.room = d.v; const r = room(d.v); S.date = isWeeknight(r) ? (cur.id === r.id ? S.date : dateFor(r)) : (S.sunDate || (dOf(S.date).getDay() === 0 ? S.date : lastSunday(TODAY))); render(); },
+  day: d => { const r = room(S.room); if (isWeeknight(r)) { const x = +d.v < 0 ? prevMeet(r, addDays(S.date, -1)) : nextMeet(r, S.date); if (x) S.date = x; } else S.date = addDays(S.date, +d.v); render(); },
+  wnGo: d => { S.date = d.d; render(); },
+  allin: () => { const s = ensureSession(S.date, S.room); DB.students.filter(k => inClass(k, S.room) && k.active !== false).forEach(k => { if (!s.att[k.id]) s.att[k.id] = {in: nowT(), by: k.guardians[0] ? k.guardians[0].name : ''}; }); persist(); render(); toast('Everyone checked in — uncheck anyone who isn’t here'); },
+  rosterEdit: () => rosterModal(),
+  rmMode: d => { rmGrab(); const m = S.modal.rx.meets; m.mode = d.v; if (d.v !== 'dates' && (m.day == null)) m.day = 3; S.modal.focus = false; renderModal(); },
+  rmDateAdd: () => { rmGrab(); const v = val('r_dt'); if (!v) { toast('Pick a date first'); return; } const m = S.modal.rx.meets; m.dates = [...new Set([...(m.dates || []), v])].sort(); S.modal.focus = false; renderModal(); },
+  rmDateRm: d => { rmGrab(); const m = S.modal.rx.meets; m.dates = (m.dates || []).filter(x => x !== d.v); S.modal.focus = false; renderModal(); },
+  openDay: d => { S.room = d.r; S.date = d.d; S.tab = 'today'; S.student = null; render(); scrollTo(0, 0); }
+});
+
+
+/* ======== Teacher tools (Derek, 2026-11-09): teachers edit their own students, undo check-in, walk kids to the Nave, "can't make it" alerts, plan lessons from My schedule, child + adult visitors ======== */
+const NAVE = 'Walked to parents in the Nave';
+const kidsN = n => `${n} ${n === 1 ? 'child' : 'children'}`;
+const canEditKid = k => !!k && (isDirector() || myRooms().some(r => inClass(k, r.id)));
+const myId = () => (meAdult() || {}).id;
+const awayOf = p => (p && p.away) || [];
+const isAway = (p, id) => awayOf(p).some(x => x.id === id);
+
+/* 1. teachers edit the profiles of children in their classes */
+const _viewProfileT = viewProfile;
+viewProfile = function (k) {
+  let h = _viewProfileT(k); if (!k || isDirector() || !canEditKid(k)) return h;
+  const health = `<section class="card"><div class="sec"><h2>Health &amp; photos</h2></div><dl class="kv"><dt>Allergies</dt><dd>${esc(k.allergies || 'None listed')}</dd><dt>Medical</dt><dd>${esc(k.medical || 'None listed')}</dd><dt>Photos</dt><dd>${k.photo_ok === false ? 'Do not photograph or post' : 'OK to photograph'}</dd></dl></section>`;
+  return h.replace('<div class="prof">', `<div class="row" style="justify-content:flex-end;margin:-6px 0 10px"><button class="btn" data-act="studentEdit" data-id="${k.id}">Edit profile</button></div><div class="prof">${health}`);
+};
+const _studentModalT = studentModal;
+studentModal = function (k) {
+  if (k && !canEditKid(k)) { toast('Only the director or this child’s teacher can edit this profile'); return; }
+  _studentModalT(k); if (isDirector()) return;
+  const m = S.modal; if (!k && myRooms()[0]) m.k.room_id = (myRooms().find(r => r.id === S.room) || myRooms()[0]).id;
+  const html = m.html; const ok = new Set(myRooms().map(r => r.id));
+  m.html = () => { const x = S.modal.k; const h = html().replace(/<label class="f" for="s_n">Notes \(director only\)[\s\S]*?<\/label>/, '');
+    return h.replace(/(<select id="s_r">)[\s\S]*?(<\/select>)/, (all, a, b) => a + DB.rooms.filter(r => ok.has(r.id) || r.id === x.room_id).map(r => `<option value="${r.id}" ${r.id === x.room_id ? 'selected' : ''}>${esc(r.name)}</option>`).join('') + b); };
+  renderModal();
+};
+const _grabStudentT = grabStudent;
+grabStudent = function () { const x = S.modal.k; const keep = x.notes; _grabStudentT(); if (!$('#s_n')) x.notes = keep; };
+const _viewStudentsT = viewStudents;
+viewStudents = function () { let h = _viewStudentsT(); if (isDirector()) return h;
+  return h.replace('You see the children in your rooms. Full profiles, health notes and history are kept by the Christian Ed Director.', 'You see the children in your classes and can update their profiles — tap a child, then <b>Edit profile</b>. Private notes stay with the Christian Ed Director.')
+    .replace(/<span style="flex:1"><\/span>(<\/div>)/, '<span style="flex:1"></span><button class="btn gold" data-act="studentNew">+ Add a student</button>$1'); };
+
+/* 2–3, 6. class day: undo check-in, walk to the Nave, child + adult visitors */
+const _viewTodayT = viewToday;
+viewToday = function () {
+  let h = _viewTodayT(); const r = room(S.room); const s = session(S.date, S.room) || {att: {}, adult_visitors: []};
+  h = h.replace(/<button class="btn sm" data-act="checkout" data-id="([^"]+)">Check out<\/button>/g, '<span class="row" style="gap:4px;flex-wrap:nowrap"><button class="btn sm ghost" data-act="undoIn" data-id="$1" title="Undo check-in" aria-label="Undo check-in">↺</button><button class="btn sm" data-act="checkout" data-id="$1">Check out</button></span>');
+  const inNow = Object.values(s.att || {}).filter(a => a.in && !a.out).length;
+  if (!isWeeknight(r) && inNow) h = h.replace('<button class="btn sm" data-act="allin">Check in all</button>', `<button class="btn sm" data-act="allin">Check in all</button><button class="btn sm" data-act="walkNave" title="Check out everyone still here as walked to their parents in the Nave">🚶 Walk class to the Nave</button>`);
+  h = h.replace('data-act="visitor">+ Visitor</button>', 'data-act="visitor">+ Child visitor</button><button class="btn sm gold" data-act="adultVisitor">+ Adult visitor</button>').replace('<h2>Attendance</h2>', '<h2>Attendance</h2>');
+  const av = s.adult_visitors || [];
+  const list = av.length ? `<div class="lbl" style="margin:10px 0 4px">Adult visitors <span class="tiny muted" style="text-transform:none;letter-spacing:0">— not counted as teachers</span></div>${av.map((v, i) => `<div class="adult"><div><b>${esc(v.name)}</b><div class="tiny muted">${esc(v.why || 'Visitor')}${v.with ? ' · with ' + esc(v.with) : ''}${v.phone ? ' · ' + esc(v.phone) : ''} · in ${t12(v.in)}${v.out ? ' · out ' + t12(v.out) : ''}</div></div><div class="row">${v.out ? '' : `<button class="btn sm" data-act="avOut" data-i="${i}">Sign out</button>`}<button class="btn sm ghost" data-act="avDel" data-i="${i}" aria-label="Remove ${esc(v.name)}">×</button></div></div>`).join('')}` : '';
+  return h.replace(/(<section class="card" aria-label="Adults in the room">[\s\S]*?)(<\/section>)/, `$1${list}$2`);
+};
+function adultVisitorModal() {
+  const s = ensureSession(S.date, S.room); const kids = DB.students.filter(k => k.active !== false && (inClass(k, S.room) || (s.visitors || []).includes(k.id))).sort((a, b) => a.first.localeCompare(b.first));
+  openModal(() => `${head('Add an adult visitor')}<div class="stack"><div class="grid2"><label class="f" for="av_n">Name<input id="av_n"></label><label class="f" for="av_p">Phone<input id="av_p" inputmode="tel"></label></div>
+    <label class="f" for="av_w">Why they’re here<select id="av_w">${['Parent / guardian staying with their child', 'Grandparent or family', 'Guest speaker or helper', 'Observer / new volunteer', 'Other'].map(x => `<option>${x}</option>`).join('')}</select></label>
+    <label class="f" for="av_k">With which child (optional)<select id="av_k"><option value="">—</option>${kids.map(k => `<option>${esc(kname(k))}</option>`).join('')}</select></label>
+    <label class="f" for="av_note">Note (optional)<input id="av_note"></label>
+    <div class="tiny muted">Adult visitors are signed into the room for safety, but they don’t count as a teacher or cleared adult.</div></div>${foot('Sign in')}`, () => {
+    if (!val('av_n')) { toast('Enter their name'); return false; }
+    s.adult_visitors = [...(s.adult_visitors || []), {id: 'v' + uid(), name: val('av_n'), phone: val('av_p'), why: val('av_w'), with: val('av_k'), note: val('av_note'), in: nowT(), out: '', by: (meAdult() || {}).name || ''}]; toast(val('av_n') + ' signed in'); return true; });
+}
+const _checkoutModalT = checkoutModal;
+checkoutModal = function (k) { _checkoutModalT(k); if (isWeeknight(room(S.room))) return; const html = S.modal.html;
+  S.modal.html = () => html().replace('<div class="lbl">Who is picking up?</div><div class="rooms">', `<div class="lbl">Who is picking up?</div><div class="rooms"><button class="chipbtn" data-act="pickup" data-v="${NAVE}">🚶 Walked to parents in the Nave</button>`); renderModal(); };
+const _visitorModalT = visitorModal;
+visitorModal = function () { _visitorModalT(); const html = S.modal.html; S.modal.html = () => html().replace('Add a visitor</h2>', 'Add a child visitor</h2>'); renderModal(); };
+
+/* 4–5. My schedule: "I can't make it" (alerts the director) and plan lessons ahead */
+const _planStateT = planState;
+planState = function (p) { if (!awayOf(p).length) return _planStateT(p); const q = {...p, adults: p.adults.filter(id => !isAway(p, id))}; const st = _planStateT(q); return st.cls === 'ok' ? st : {...st, txt: st.txt + ' (teacher away)'}; };
+function savePlan(p) { const q = {...p}; delete q._auto; const i = DB.schedule.findIndex(x => x.date === q.date && x.room_id === q.room_id); if (i >= 0) DB.schedule[i] = q; else DB.schedule.push(q); persist(); }
+function myUpcoming(from, to) {
+  const id = myId(); if (!id) return [];
+  const out = []; myRooms().forEach(r => { const D = isWeeknight(r) ? meetDates(r, from, to) : (() => { const L = []; for (let d = lastSunday(from); d <= to; d = addDays(d, 7)) if (d >= from) L.push(d); return L; })();
+    D.forEach(d => { const p = planFor(d, r.id); if (!p.cancelled && !p.merge_into && (p.adults.includes(id) || isAway(p, id))) out.push({d, r, p}); }); });
+  return out.sort((a, b) => a.d.localeCompare(b.d) || a.r.name.localeCompare(b.r.name));
+}
+function upcomingAway() { const out = []; DB.schedule.filter(p => p.date >= TODAY && awayOf(p).length).forEach(p => awayOf(p).forEach(x => out.push({p, x, a: adult(x.id), r: room(p.room_id)}))); return out.sort((a, b) => a.p.date.localeCompare(b.p.date)); }
+const _viewCalT = viewCal;
+viewCal = function () {
+  let h = _viewCalT();
+  if (isDirector()) { const L = upcomingAway(); if (!L.length) return h;
+    const box = `<div class="notice warn" style="margin-bottom:12px">🙋 <div><b>Teachers who can’t make it:</b> ${L.map(({p, x, a, r}) => `<button class="btn sm" data-act="planEdit" data-d="${p.date}" data-r="${p.room_id}" style="margin:2px 4px 2px 0">${esc((a || {}).name || 'Teacher')} · ${esc(r.name)} · ${fmt(p.date, {month: 'short', day: 'numeric'})}${x.note ? ' — ' + esc(x.note) : ''} · ${esc(planState(p).txt)}</button>`).join('')}<div class="tiny muted">Tap one to schedule a sub, merge the class or mark no class.</div></div></div>`;
+    return h.replace('</div></div>', '</div></div>' + box); }
+  const id = myId(); if (!id) return h; const L = myUpcoming(S.calFrom, addDays(S.calFrom, 55));
+  const rows = L.map(({d, r, p}) => { const away = isAway(p, id); const s = session(d, r.id); const les = s && s.lesson && s.lesson.title;
+    return `<div class="myrow ${away ? 'away' : ''}"><div class="when"><b>${fmt(d, {weekday: 'short', month: 'short', day: 'numeric'})}</b><span class="tiny muted"><span class="dot" style="background:${r.color}"></span> ${esc(r.name)}</span></div>
+      <div class="what">${away ? `<span class="chip bad">You can’t make it</span>${(awayOf(p).find(x => x.id === id) || {}).note ? ` <span class="tiny muted">${esc(awayOf(p).find(x => x.id === id).note)}</span>` : ''}` : `<span class="chip ok">You’re teaching</span>`}
+        <div class="small" style="margin-top:4px">${les ? `📖 <b>${esc(s.lesson.title)}</b>${s.plan ? ' <span class="chip ok">Plan</span>' : ''}` : '<span class="muted">No lesson yet</span>'}</div></div>
+      <div class="acts">${d >= TODAY ? `<button class="btn sm" data-act="myLesson" data-d="${d}" data-r="${r.id}">${les ? 'Edit lesson' : '+ Add lesson'}</button><button class="btn sm ghost" data-act="myPlan" data-d="${d}" data-r="${r.id}">📝 ${s && s.plan ? 'Edit plan' : 'Lesson plan'}</button>${away ? `<button class="btn sm" data-act="awayUndo" data-d="${d}" data-r="${r.id}">I can be there after all</button>` : `<button class="btn sm danger" data-act="awaySet" data-d="${d}" data-r="${r.id}">I can’t make it</button>`}` : '<span class="tiny muted">past</span>'}</div></div>`; }).join('');
+  const box = `<section class="card" style="margin-bottom:14px"><div class="sec"><h2>My classes</h2><span class="tiny muted">${fmt(S.calFrom, {month: 'short', day: 'numeric'})} – ${fmt(addDays(S.calFrom, 55), {month: 'short', day: 'numeric'})}</span></div>${rows || '<div class="small muted">You’re not on the schedule in these weeks.</div>'}<div class="tiny muted" style="margin-top:6px">Can’t make a class? Tap <b>I can’t make it</b> — the Christian Ed Director is alerted to find a sub. Add your lesson ahead of time with <b>+ Add lesson</b>.</div></section>`;
+  return h.replace('</div></div>', '</div></div>' + box).replace('Let the Christian Ed Director know if you can’t make a Sunday.', 'Use <b>I can’t make it</b> above if you can’t be there.');
+};
+function awayModal(date, rid) { const r = room(rid);
+  openModal(() => `${head('Can’t make it — ' + esc(r.name))}<div class="stack"><div><b>${fmt(date, {weekday: 'long', month: 'long', day: 'numeric'})}</b></div>
+    <label class="f" for="aw_n">Note for the director (optional)<input id="aw_n" placeholder="e.g. Out of town — Hayley may be able to sub"></label>
+    <div class="tiny muted">The Christian Ed Director sees this right away on her dashboard and calendar so she can find a sub.</div></div>${foot('Let the director know')}`, () => {
+    const p = {...planFor(date, rid)}; p.adults = [...p.adults]; const id = myId(); p.away = [...awayOf(p).filter(x => x.id !== id), {id, note: val('aw_n'), at: new Date().toISOString(), by: (meAdult() || {}).name || ''}]; if (!p.adults.includes(id)) p.adults.push(id); savePlan(p); toast('Thanks — the director has been alerted'); return true; }); }
+Object.assign(A, {
+  undoIn: d => { const s = ensureSession(S.date, S.room); const k = kid(d.id); delete s.att[d.id]; persist(); render(); toast((k ? k.first : 'Check-in') + ' — check-in undone'); },
+  walkNave: () => { const s = ensureSession(S.date, S.room); const L = Object.keys(s.att).filter(id => s.att[id].in && !s.att[id].out); if (!L.length) return; if (!confirm(`Check out ${kidsN(L.length)} as walked to their parents in the Nave?`)) return; const t = nowT(); L.forEach(id => { s.att[id] = {...s.att[id], out: t, to: NAVE}; }); persist(); render(); toast(kidsN(L.length) + ' checked out — walked to the Nave'); },
+  adultVisitor: () => adultVisitorModal(),
+  avOut: d => { const s = ensureSession(S.date, S.room); const v = (s.adult_visitors || [])[+d.i]; if (v) v.out = nowT(); persist(); render(); },
+  avDel: d => { const s = ensureSession(S.date, S.room); s.adult_visitors = (s.adult_visitors || []).filter((_, i) => i !== +d.i); persist(); render(); },
+  awaySet: d => awayModal(d.d, d.r),
+  awayUndo: d => { const p = {...planFor(d.d, d.r)}; p.away = awayOf(p).filter(x => x.id !== myId()); savePlan(p); render(); toast('Got it — you’re back on for that day'); },
+  myLesson: d => { const keep = [S.date, S.room]; S.date = d.d; S.room = d.r; lessonModal(); [S.date, S.room] = keep; },
+  myPlan: d => { const keep = [S.date, S.room]; S.date = d.d; S.room = d.r; planModal(); [S.date, S.room] = keep; }
+});
+
+/* director: dashboard + tab alerts */
+const _viewDashT = viewDash;
+viewDash = function () { const h = _viewDashT(); const L = upcomingAway(); if (!L.length) return h;
+  return h.replace('<div class="stats">', `<div class="notice warn" style="margin-bottom:12px">🙋 <div><b>${plural(L.length, 'teacher')} can’t make it:</b> ${L.slice(0, 6).map(({p, x, a, r}) => `<button class="btn sm" data-act="planEdit" data-d="${p.date}" data-r="${p.room_id}" style="margin:2px 4px 2px 0">${esc((a || {}).name || 'Teacher')} · ${esc(r.name)} · ${fmt(p.date, {month: 'short', day: 'numeric'})} · ${esc(planState(p).txt)}</button>`).join('')}</div></div><div class="stats">`); };
+const _renderTabsT = renderTabs;
+renderTabs = function () { _renderTabsT(); if (!isDirector()) return; const n = upcomingAway().filter(({p}) => planState(p).cls !== 'ok').length; if (!n) return; const b = $('#tabs [data-v="cal"]'); if (b && !b.querySelector('.chip')) b.insertAdjacentHTML('beforeend', ` <span class="chip warn" style="margin-left:4px">${n}</span>`); };
+/* schedule window: show who said they can't make it, and let the director clear it */
+const _planModal2T = planModal2;
+planModal2 = function (date, rid) { _planModal2T(date, rid); const m = S.modal; const html = m.html;
+  m.html = () => { const p = m.plan; const aw = awayOf(p); if (!aw.length) return html();
+    let h = html().replace('<div class="rooms" role="radiogroup"', `<div class="notice warn">🙋 <div>${aw.map(x => `<b>${esc((adult(x.id) || {}).name || 'A teacher')}</b> can’t make it${x.note ? ' — ' + esc(x.note) : ''}`).join('<br>')}<div class="tiny muted">Pick a sub below (uncheck the teacher who’s away), merge the class, or mark no class.</div></div></div><div class="rooms" role="radiogroup"`);
+    aw.forEach(x => { h = h.replace(new RegExp(`(<input type="checkbox" class="pl_ad" value="${x.id}"[^>]*>\\s*<span><b>[^<]*</b>)`), '$1 <span class="chip bad" style="padding:0 6px">away</span>'); }); return h; };
+  const save = m.onSave; m.onSave = () => { grabPlan(); const p = m.plan; p.away = awayOf(p).filter(x => p.adults.includes(x.id)); return save(); };
+  renderModal(); };
+/* monthly report: adult visitors */
+const _summaryTextT = summaryText;
+summaryText = function (ym) { const t = _summaryTextT(ym); const n = DB.sessions.filter(s => s.date.slice(0, 7) === ym).reduce((a, s) => a + (s.adult_visitors || []).length, 0); return n ? t.replace(/(\nIssues –)/, `\nAdult visitors – ${n}$1`) : t; };
+document.head.insertAdjacentHTML('beforeend', `<style id="teacher">
+.f label.list-item .row{display:flex!important;flex-direction:row!important;align-items:center;gap:10px;text-align:left}.f label.list-item .row>span{display:block}.f label.list-item input[type=checkbox]{width:18px;height:18px;flex:none;margin:0}
+.myrow{display:grid;grid-template-columns:150px 1fr auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}.myrow:first-of-type{border-top:0}.myrow .when{display:flex;flex-direction:column}.myrow .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.myrow.away{opacity:.9;background:linear-gradient(90deg,#fff5f4,transparent)}
+@media (max-width:700px){.myrow{grid-template-columns:1fr}.myrow .acts{justify-content:flex-start}}
+</style>`);
+
+/* ======== Teachers don't see clearances (Derek, 2026-11-09) — clearance and training status is for the Director / admins only ======== */
+const noClr = h => h
+  .replace(/<span class="chip (ok|warn|bad)">(✓ Clearance &amp; training current|✓ Clearance & training current|Renewal due soon|✕ Clearance or training missing|✓ cleared|renew soon|✕ not cleared)<\/span>/g, '')
+  .replace(/ <span class="chip (warn|bad)" style="padding:0 5px" title="[^"]*">(✕|!)<\/span>/g, '')
+  .replace(/<span class="tiny muted">\d+ cleared<\/span>/g, '<span class="tiny muted">signed in</span>')
+  .replace(/no head teacher with a current clearance and training is signed into this room\. Sign one in, or merge this class with another room\./, 'no head teacher is signed into this room yet. Sign yourself in under Adults in the room.')
+  .replace(/Head teacher not cleared/g, 'Scheduled').replace(/Needs a head teacher/g, 'Needs a head teacher');
+const _renderTabsC = renderTabs;
+renderTabs = function () { if (!isDirector() && S.tab === 'adults') S.tab = 'today'; _renderTabsC(); if (isDirector()) return; const b = $('#tabs [data-v="adults"]'); if (b) b.remove(); };
+const clrWrap = f => function () { const h = f.apply(this, arguments); return isDirector() ? h : noClr(h); };
+viewToday = clrWrap(viewToday); viewCal = clrWrap(viewCal); viewStudents = clrWrap(viewStudents); viewProfile = clrWrap(viewProfile); viewLessons = clrWrap(viewLessons); viewIssues = clrWrap(viewIssues);
+const _renderModalC = renderModal;
+renderModal = function () { const m = S.modal; if (isDirector() || !m || typeof m.html !== 'function') return _renderModalC(); const orig = m.html; m.html = () => noClr(orig()); try { _renderModalC(); } finally { m.html = orig; } };
+
+
+/* ======== Kids' photos + easier-to-read check lists on phones (Derek, 2026-11-09) ======== */
+/* photo: a small square JPEG kept on the child's record (k.photo). It's for recognizing the child at check-in and pickup — never posted. */
+function squarePhoto(file, size) { return new Promise((res, rej) => { const img = new Image(); const url = URL.createObjectURL(file); img.onload = () => { const s = Math.min(img.width, img.height); const c = document.createElement('canvas'); c.width = c.height = size; c.getContext('2d').drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, size, size); URL.revokeObjectURL(url); res(c.toDataURL('image/jpeg', .82)); }; img.onerror = e => { URL.revokeObjectURL(url); rej(e); }; img.src = url; }); }
+const avImg = k => k && k.photo ? `<img src="${k.photo}" alt="">` : null;
+function kidAvatars(h) {
+  return h.replace(/<div class="av" style="([^"]*)">([^<]*)<\/div>(\s*<div style="min-width:0"><div class="nm"><button data-act="profile" data-id="([^"]+)")/g, (m, st, ini, rest, id) => { const i = avImg(kid(id)); return i ? `<div class="av has" style="${st}">${i}</div>${rest}` : m; })
+    .replace(/(data-act="profile" data-id="([^"]+)"><td><div class="row"[^>]*><div class="av)( style="[^"]*">)([^<]*)(<\/div>)/g, (m, a, id, st, ini, end) => { const i = avImg(kid(id)); return i ? `${a} has${st}${i}${end}` : m; });
+}
+const _viewTodayP = viewToday; viewToday = function () { return kidAvatars(_viewTodayP()); };
+const _viewStudentsP = viewStudents; viewStudents = function () { return kidAvatars(_viewStudentsP()); };
+const _viewProfileP = viewProfile;
+viewProfile = function (k) { let h = _viewProfileP(k); if (!k) return h; const can = canEditKid(k);
+  h = h.replace(/<div class="phead"><div class="av" style="([^"]*)">([^<]*)<\/div>/, (m, st, ini) => `<div class="phead"><div class="avwrap"><div class="av ${k.photo ? 'has' : ''}" style="${st}">${k.photo ? `<img src="${k.photo}" alt="Photo of ${esc(k.first)}">` : ini}</div>${can ? `<label class="avbtn" title="${k.photo ? 'Change photo' : 'Add a photo'}">📷<input type="file" accept="image/*" class="hidden" data-kidphoto="${k.id}"></label>` : ''}</div>`);
+  return h; };
+/* photo in the student form */
+const _studentModalP = studentModal;
+studentModal = function (k) { _studentModalP(k); const m = S.modal; if (!m || !m.k) return; const html = m.html;
+  m.html = () => { const x = S.modal.k; return html().replace('<div class="stack">', `<div class="stack"><div class="kphoto"><div class="av ${x.photo ? 'has' : ''}" style="background:${room(x.room_id).color}">${x.photo ? `<img src="${x.photo}" alt="">` : esc(initials({first: x.first || '?', last: x.last || ''}))}</div><div><div class="lbl">Photo</div><div class="row" style="gap:6px;margin-top:4px"><label class="btn sm">📷 ${x.photo ? 'Change photo' : 'Add a photo'}<input type="file" accept="image/*" class="hidden" data-kidphoto="modal"></label>${x.photo ? '<button class="btn sm ghost" data-act="kidPhotoDel">Remove</button>' : ''}</div><div class="tiny muted" style="margin-top:4px">Helps teachers recognize the child at check-in and pickup. Kept in delcEDUCATION only — never posted.</div></div></div>`); };
+  renderModal(); };
+document.addEventListener('change', async e => {
+  const t = e.target; if (!t.dataset || !t.dataset.kidphoto || !t.files || !t.files[0]) return;
+  let url; try { url = await squarePhoto(t.files[0], 320); } catch (_) { toast('That picture couldn’t be read — try a JPG or PNG'); return; }
+  if (t.dataset.kidphoto === 'modal') { if (S.modal && S.modal.k) { grabStudent(); S.modal.k.photo = url; S.modal.focus = false; renderModal(); } return; }
+  const k = kid(t.dataset.kidphoto); if (!k || !canEditKid(k)) return; k.photo = url; persist(); render(); toast('Photo saved');
+});
+A.kidPhotoDel = () => { if (!S.modal || !S.modal.k) return; grabStudent(); S.modal.k.photo = ''; S.modal.focus = false; renderModal(); };
+
+/* issue form: a clear, tappable list of children (with photos) that follows the Room picked */
+const _issueModalP = issueModal;
+issueModal = function (i) { _issueModalP(i); const m = S.modal; const iss = m.issue; const html = m.html; m.isel = new Set(iss.student_ids || []); m.iroom = iss.room_id;
+  m.html = () => { const kids = DB.students.filter(k => k.active !== false && (k.room_id === m.iroom || (k.also || []).includes(m.iroom))).sort((a, b) => a.first.localeCompare(b.first));
+    const list = `<div class="f"><span>Children involved (optional)</span><div class="kidpick">${kids.map(k => `<label class="kp ${m.isel.has(k.id) ? 'on' : ''}"><input type="checkbox" class="i_kid" value="${k.id}" ${m.isel.has(k.id) ? 'checked' : ''}><span class="av sm ${k.photo ? 'has' : ''}" style="background:${room(k.room_id).color}">${k.photo ? `<img src="${k.photo}" alt="">` : esc(initials(k))}</span><span class="kn">${esc(kname(k))}</span><span class="ck" aria-hidden="true">✓</span></label>`).join('') || '<div class="small muted">No children in this room.</div>'}</div></div>`;
+    return html().replace(/<div class="f"><span>Children involved \(optional\)<\/span><div class="rooms">[\s\S]*?<\/div><\/div>/, list).replace(/(<select id="i_room")/, '$1 data-chg="issueRoom"'); };
+  renderModal(); };
+const issueKeep = () => { const m = S.modal; const i = m.issue; $$('.i_kid').forEach(c => { if (c.checked) m.isel.add(c.value); else m.isel.delete(c.value); }); const v = id => { const el = $('#' + id); return el ? el.value : null; };
+  if ($('#i_type')) i.type = v('i_type'); if ($('#i_d')) i.description = v('i_d'); if ($('#i_a')) i.action = v('i_a'); if ($('#i_pn')) i.parent_notified = $('#i_pn').checked; if ($('#i_pt')) i.notified_at = v('i_pt'); if ($('#i_f')) i.followup = v('i_f'); if ($('#i_s')) i.status = v('i_s'); };
+document.addEventListener('change', e => { const m = S.modal; if (!m || !m.issue) return;
+  if (e.target.classList && e.target.classList.contains('i_kid')) { const l = e.target.closest('.kp'); if (l) l.classList.toggle('on', e.target.checked); if (e.target.checked) m.isel.add(e.target.value); else m.isel.delete(e.target.value); }
+  if (e.target.dataset && e.target.dataset.chg === 'issueRoom') { issueKeep(); m.iroom = e.target.value; m.issue.room_id = m.iroom; const ok = new Set(DB.students.filter(k => k.room_id === m.iroom || (k.also || []).includes(m.iroom)).map(k => k.id)); m.isel = new Set([...m.isel].filter(id => ok.has(id))); m.focus = false; renderModal(); } });
+
+document.head.insertAdjacentHTML('beforeend', `<style id="kidphoto">
+input[type=file].hidden,.hidden{display:none!important}
+.kphoto label.btn{display:inline-flex;flex-direction:row;align-items:center;gap:6px;color:var(--ink);font-size:13px}
+/* checkboxes inside form labels were being stretched to full width on phones */
+.f input[type=checkbox],.f input[type=radio],.rooms input[type=checkbox]{width:18px!important;height:18px;padding:0!important;margin:0;flex:none;accent-color:var(--navy)}
+.rooms label.chipbtn{flex-direction:row!important;text-align:left;line-height:1.25}
+.av{overflow:hidden}.av.has{background:#ddd!important}.av img{width:100%;height:100%;object-fit:cover;display:block}
+.avwrap{position:relative;flex:none}.avbtn{position:absolute;right:-4px;bottom:-4px;width:30px;height:30px;border-radius:50%;background:var(--card);border:1px solid var(--line);display:grid;place-items:center;cursor:pointer;font-size:15px;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.kphoto{display:flex;gap:12px;align-items:center}.kphoto .av{width:64px;height:64px;font-size:20px;flex:none}
+.kidpick{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.kp{display:flex!important;flex-direction:row!important;align-items:center;gap:10px;border:1.5px solid var(--line);border-radius:12px;padding:8px 10px;cursor:pointer;background:var(--card);color:var(--ink);font-size:15px;font-weight:600;min-height:48px}
+.kp input{position:absolute;opacity:0;pointer-events:none;width:1px!important;height:1px}.kp .kn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kp .ck{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font-size:13px;color:transparent;flex:none}
+.kp.on{border-color:var(--navy);background:var(--info-soft)}.kp.on .ck{background:var(--navy);border-color:var(--navy);color:#fff}
+.av.sm{width:32px;height:32px;font-size:12px;flex:none;display:grid;place-items:center;border-radius:50%;color:#fff;font-weight:800}
+@media (max-width:640px){.kidpick{grid-template-columns:1fr}}
+</style>`);
+
+liveBoot(() => { persist(); render(); loadChurchKids(); loadFacRooms(); });
+</script>
+
+</body>
+</html>
