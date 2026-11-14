@@ -888,7 +888,7 @@ const _persistDemo = persist;
 persist = function () { if (Live.on) { MEMORY = DB; Live.queue(); clearTimeout(sendT); sendT = setTimeout(() => sendSummary(TODAY.slice(0, 7), true), 4000); return; } if (LIVE_CFG && !Live.on) return; _persistDemo(); };
 const _renderWhoDemo = renderWho; renderWho = function () { if (Live.on) return; _renderWhoDemo(); };
 const _viewDashLive = viewDash;
-viewDash = function () { const h = _viewDashLive(); if (!Live.on || DB.adults.length) return h; return `<div class="notice info" style="margin-bottom:12px"><b>Getting started:</b> add the teachers and helpers under <b>Adults &amp; clearances</b> with their rooms, clearance dates and DELC Apps username (that’s how they sign in and see only their rooms — set the director’s role to <b>Director</b>). Then add the children under <b>Student profiles</b>. <button class="btn sm gold" data-act="tab" data-v="adults" style="margin-left:6px">Add adults</button></div>` + h; };
+viewDash = function () { const h = _viewDashLive(); if (!Live.on || DB.adults.length) return h; return `<div class="notice info" style="margin-bottom:12px;display:block"><b>Getting started:</b> add the teachers and helpers under <b>Adults &amp; clearances</b> with their rooms, clearance dates and DELC Apps username (that’s how they sign in and see only their rooms — set the director’s role to <b>Director</b>). Then add the children under <b>Student profiles</b>. <button class="btn sm gold" data-act="tab" data-v="adults" style="margin-left:6px">Add adults</button></div>` + h; };
 
 
 /* ======== Weeknight classes (Derek, 2026-11-09): classes like JAM that meet on another night, weekly / certain weeks of the month / picked dates ======== */
@@ -1325,6 +1325,38 @@ document.head.insertAdjacentHTML('beforeend', `<style id="supplies">
 </style>`);
 
 liveBoot(() => { persist(); render(); loadChurchKids(); loadFacRooms(); });
+
+/* ---- Adults are people in delcPEOPLE (2026-11-14): the name box suggests everyone there; picking a name fills phone, email, sign-in and clearance dates. The database link (edu_adult_sync) does the rest. ---- */
+let PPL = null;
+async function pplLoad() {
+  if (PPL || typeof Live === 'undefined' || !Live.on || !window.DelcAuth) return PPL || [];
+  try {
+    const sel = 'id,first:data->>first,last:data->>last,phone:data->>phone,email:data->>email,hub:data->>hub,active:data->>active,ca:data->clearances->>child_abuse,tx:data->>training_exp,edu:data->>edu_adult';
+    const r = await fetch(`${DelcAuth.SUPABASE_URL}/rest/v1/people_records?kind=eq.people&select=${sel}`, {headers: hubHdr()});
+    if (!r.ok) throw new Error('people ' + r.status);
+    PPL = (await r.json()).filter(p => p.active !== 'false').map(p => ({...p, name: [p.first, p.last].filter(Boolean).join(' ').trim()})).filter(p => p.name).sort((a, b) => a.name.localeCompare(b.name));
+  } catch (e) { console.warn('delcPEOPLE list', e); PPL = []; }
+  return PPL;
+}
+const pplNorm = v => String(v || '').toLowerCase().replace(/\s+/g, ' ').trim();
+const _adultModalP = adultModal;
+adultModal = function (a) {
+  const isNew = !a; _adultModalP(a);
+  pplLoad().then(L => {
+    const n = $('#a_n'); if (!n || !L.length) return;
+    let dl = document.getElementById('pplNames'); if (!dl) { dl = document.createElement('datalist'); dl.id = 'pplNames'; document.body.appendChild(dl); }
+    const taken = new Set(DB.adults.filter(x => !a || x.id !== a.id).map(x => pplNorm(x.name)));
+    dl.innerHTML = L.filter(p => !taken.has(pplNorm(p.name))).map(p => `<option value="${esc(p.name)}"></option>`).join('');
+    n.setAttribute('list', 'pplNames'); n.setAttribute('autocomplete', 'off');
+    let hint = document.getElementById('a_pplhint'); if (!hint) { hint = document.createElement('div'); hint.id = 'a_pplhint'; hint.className = 'tiny muted'; n.closest('.grid2').insertAdjacentElement('afterend', hint); }
+    const fill = (p, force) => { const set = (id, v) => { const el = $('#' + id); if (el && v && (force || !el.value)) el.value = v; };
+      set('a_p', p.phone); set('a_e', p.email); set('a_hub', p.hub); set('a_c1', p.ca); set('a_tx', p.tx); };
+    const check = (ev) => { const p = L.find(x => pplNorm(x.name) === pplNorm(n.value));
+      if (p) { hint.innerHTML = `✓ <b>${esc(p.name)}</b> is in delcPEOPLE${isNew ? ' — phone, email, sign-in and clearance dates filled in where blank' : ''}.`; if (isNew && ev) fill(p, false); }
+      else hint.textContent = n.value.trim() ? 'Not in delcPEOPLE yet — they’re added there when you save.' : (isNew ? 'Start typing to pick someone from delcPEOPLE.' : ''); };
+    n.addEventListener('input', check); n.addEventListener('change', check); check(null);
+  });
+};
 </script>
 
 </body>
