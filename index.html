@@ -1185,7 +1185,7 @@ renderModal = function () { const m = S.modal; if (isDirector() || !m || typeof 
 /* ======== Kids' photos + easier-to-read check lists on phones (Derek, 2026-11-09) ======== */
 /* photo: a small square JPEG kept on the child's record (k.photo). It's for recognizing the child at check-in and pickup — never posted. */
 function squarePhoto(file, size) { return new Promise((res, rej) => { const img = new Image(); const url = URL.createObjectURL(file); img.onload = () => { const s = Math.min(img.width, img.height); const c = document.createElement('canvas'); c.width = c.height = size; c.getContext('2d').drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, size, size); URL.revokeObjectURL(url); res(c.toDataURL('image/jpeg', .82)); }; img.onerror = e => { URL.revokeObjectURL(url); rej(e); }; img.src = url; }); }
-const avImg = k => k && k.photo ? `<img src="${k.photo}" alt="">` : null;
+const avImg = k => k && k.photo ? `<img src="${k.photo}" alt="Photo of ${esc(kname(k))}">` : null;
 function kidAvatars(h) {
   return h.replace(/<div class="av" style="([^"]*)">([^<]*)<\/div>(\s*<div style="min-width:0"><div class="nm"><button data-act="profile" data-id="([^"]+)")/g, (m, st, ini, rest, id) => { const i = avImg(kid(id)); return i ? `<div class="av has" style="${st}">${i}</div>${rest}` : m; })
     .replace(/(data-act="profile" data-id="([^"]+)"><td><div class="row"[^>]*><div class="av)( style="[^"]*">)([^<]*)(<\/div>)/g, (m, a, id, st, ini, end) => { const i = avImg(kid(id)); return i ? `${a} has${st}${i}${end}` : m; });
@@ -1203,7 +1203,7 @@ studentModal = function (k) { _studentModalP(k); const m = S.modal; if (!m || !m
   renderModal(); };
 document.addEventListener('change', async e => {
   const t = e.target; if (!t.dataset || !t.dataset.kidphoto || !t.files || !t.files[0]) return;
-  let url; try { url = await squarePhoto(t.files[0], 320); } catch (_) { toast('That picture couldn’t be read — try a JPG or PNG'); return; }
+  let url; const file = t.files[0]; t.value = ''; try { url = await squarePhoto(file, 320); } catch (er) { if (!(er && er.cancel)) toast('That picture couldn’t be read — try a JPG or PNG'); return; }
   if (t.dataset.kidphoto === 'modal') { if (S.modal && S.modal.k) { grabStudent(); S.modal.k.photo = url; S.modal.focus = false; renderModal(); } return; }
   const k = kid(t.dataset.kidphoto); if (!k || !canEditKid(k)) return; k.photo = url; persist(); render(); toast('Photo saved');
 });
@@ -1403,6 +1403,73 @@ function rosterPrint() {
 Object.assign(A, { signSheet: () => signSheetPrint(), rosterPrint: () => rosterPrint() });
 const _viewTodayPr = viewToday; viewToday = function () { return _viewTodayPr().replace('<button class="btn sm" data-act="allin">', '<button class="btn sm" data-act="signSheet" title="Print a paper sign-in sheet for this class">🖨 Sign-in sheet</button><button class="btn sm" data-act="allin">'); };
 const _viewStudentsPr = viewStudents; viewStudents = function () { const h = _viewStudentsPr(); return isDirector() ? h.replace('<button class="btn gold" data-act="studentNew">', '<button class="btn" data-act="rosterPrint" style="margin-right:6px">🖨 Print roster</button><button class="btn gold" data-act="studentNew">') : h; };
+
+/* ---- photo framing + tap to enlarge (Derek, 2026-11-14) ----
+   Picking a photo opens a framing window: drag to move, zoom with the slider / mouse wheel / two fingers, then "Use this photo".
+   The circle shows exactly what will be saved. Saved at 480×480 so the enlarged view stays sharp (~40 KB). */
+squarePhoto = function (file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onerror = e => { URL.revokeObjectURL(url); reject(e); };
+    img.onload = () => {
+      const V = Math.min(300, window.innerWidth - 64), OUT = 480;
+      const base = V / Math.min(img.width, img.height);           // scale that just covers the frame
+      let z = 1, x = 0, y = 0;                                    // zoom and offset of the image centre from the frame centre (px)
+      const wrap = document.createElement('div'); wrap.className = 'pcrop-bg';
+      wrap.innerHTML = `<div class="pcrop" role="dialog" aria-label="Frame the photo"><h3>Frame the photo</h3>
+        <div class="tiny muted" style="margin:-4px 0 10px">Drag the picture so the face fills the circle. Zoom in to get closer.</div>
+        <div class="pcrop-view" style="width:${V}px;height:${V}px"><img src="${url}" alt="" draggable="false"><div class="pcrop-ring"></div></div>
+        <div class="row" style="gap:8px;align-items:center;margin-top:12px"><span aria-hidden="true">➖</span><input type="range" min="1" max="4" step="0.01" value="1" aria-label="Zoom" style="flex:1"><span aria-hidden="true">➕</span></div>
+        <div class="row" style="justify-content:space-between;margin-top:14px;gap:8px"><button class="btn sm ghost" data-pc="reset">Reset</button><span style="flex:1"></span><button class="btn" data-pc="cancel">Cancel</button><button class="btn pri" data-pc="ok">Use this photo</button></div></div>`;
+      document.body.appendChild(wrap);
+      const im = wrap.querySelector('img'), view = wrap.querySelector('.pcrop-view'), rng = wrap.querySelector('input[type=range]');
+      const clamp = () => { const w = img.width * base * z, h = img.height * base * z, mx = Math.max(0, (w - V) / 2), my = Math.max(0, (h - V) / 2); x = Math.min(mx, Math.max(-mx, x)); y = Math.min(my, Math.max(-my, y)); };
+      const draw = () => { clamp(); const w = img.width * base * z, h = img.height * base * z; im.style.width = w + 'px'; im.style.height = h + 'px'; im.style.left = (V - w) / 2 + x + 'px'; im.style.top = (V - h) / 2 + y + 'px'; rng.value = z; };
+      const zoomTo = nz => { nz = Math.min(4, Math.max(1, nz)); x *= nz / z; y *= nz / z; z = nz; draw(); };
+      draw();
+      rng.addEventListener('input', () => zoomTo(+rng.value));
+      view.addEventListener('wheel', e => { e.preventDefault(); zoomTo(z * (e.deltaY < 0 ? 1.08 : 1 / 1.08)); }, {passive: false});
+      const pts = new Map(); let last = null, pinch = null;
+      view.addEventListener('pointerdown', e => { view.setPointerCapture(e.pointerId); pts.set(e.pointerId, {x: e.clientX, y: e.clientY}); last = {x: e.clientX, y: e.clientY}; if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch = {d: Math.hypot(a.x - b.x, a.y - b.y), z}; } });
+      view.addEventListener('pointermove', e => { if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, {x: e.clientX, y: e.clientY});
+        if (pts.size === 2 && pinch) { const [a, b] = [...pts.values()]; zoomTo(pinch.z * Math.hypot(a.x - b.x, a.y - b.y) / pinch.d); return; }
+        if (last) { x += e.clientX - last.x; y += e.clientY - last.y; last = {x: e.clientX, y: e.clientY}; draw(); } });
+      const up = e => { pts.delete(e.pointerId); if (pts.size < 2) pinch = null; const r = [...pts.values()][0]; last = r ? {x: r.x, y: r.y} : null; };
+      view.addEventListener('pointerup', up); view.addEventListener('pointercancel', up);
+      const close = () => { wrap.remove(); URL.revokeObjectURL(url); document.removeEventListener('keydown', key, true); };
+      const key = e => { if (e.key === 'Escape') { e.stopPropagation(); close(); reject({cancel: true}); } };
+      document.addEventListener('keydown', key, true);
+      wrap.addEventListener('click', e => { const b = e.target.closest('[data-pc]'); if (!b && e.target !== wrap) return; const a = b ? b.dataset.pc : 'cancel';
+        if (a === 'reset') { z = 1; x = y = 0; draw(); return; }
+        if (a === 'cancel') { close(); reject({cancel: true}); return; }
+        const s = base * z, sw = V / s, sx = img.width / 2 - x / s - sw / 2, sy = img.height / 2 - y / s - sw / 2;
+        const c = document.createElement('canvas'); c.width = c.height = OUT; const g = c.getContext('2d'); g.imageSmoothingQuality = 'high';
+        g.drawImage(img, sx, sy, sw, sw, 0, 0, OUT, OUT); const out = c.toDataURL('image/jpeg', .84); close(); resolve(out); });
+    };
+    img.src = url;
+  });
+};
+/* tap any child's photo to see it large (attendance rows, student list, profile, forms) */
+document.addEventListener('click', e => {
+  const im = e.target.closest && e.target.closest('.av.has img'); if (!im || e.target.closest('.pcrop-bg')) return;
+  e.preventDefault(); e.stopPropagation();
+  const box = document.createElement('div'); box.className = 'plight'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', 'Photo');
+  box.innerHTML = `<img src="${im.src}" alt="${esc(im.alt || 'Photo')}"><button class="plight-x" aria-label="Close">×</button>${im.alt ? `<div class="plight-cap">${esc(im.alt.replace(/^Photo of /, ''))}</div>` : ''}`;
+  const off = () => { box.remove(); document.removeEventListener('keydown', k, true); }; const k = ev => { if (ev.key === 'Escape') { ev.stopPropagation(); off(); } };
+  box.addEventListener('click', off); document.addEventListener('keydown', k, true); document.body.appendChild(box);
+}, true);
+(function () { const st = document.createElement('style'); st.textContent = `
+  .pcrop-bg{position:fixed;inset:0;background:rgba(10,18,32,.6);z-index:200;display:grid;place-items:center;padding:16px}
+  .pcrop{background:var(--card,#fff);border-radius:16px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.35);max-width:100%}
+  .pcrop h3{margin:0 0 8px;font-size:17px}
+  .pcrop-view{position:relative;overflow:hidden;border-radius:12px;background:#111;touch-action:none;cursor:grab;margin:0 auto}
+  .pcrop-view:active{cursor:grabbing}.pcrop-view img{position:absolute;max-width:none;user-select:none;-webkit-user-drag:none;pointer-events:none}
+  .pcrop-ring{position:absolute;inset:0;border-radius:50%;box-shadow:0 0 0 999px rgba(0,0,0,.45);outline:2px solid rgba(255,255,255,.9);outline-offset:-2px;pointer-events:none}
+  .av.has img{cursor:zoom-in}
+  .plight{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:210;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;cursor:zoom-out}
+  .plight img{width:min(92vw,480px);height:auto;border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+  .plight-x{position:absolute;top:12px;right:14px;width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.15);color:#fff;font-size:28px;cursor:pointer}
+  .plight-cap{color:#fff;margin-top:12px;font-weight:700;font-size:16px}`; document.head.appendChild(st); })();
 </script>
 
 </body>
