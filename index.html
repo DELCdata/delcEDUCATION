@@ -871,7 +871,7 @@ async function liveBoot(demoInit) {
 /* ---- delcEDUCATION live settings (the GitHub build fills in https://ksdxhqyusaylfpyeecbv.supabase.co/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtzZHhocXl1c2F5bGZweWVlY2J2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1NTE1NDgsImV4cCI6MjEwNDEyNzU0OH0.6HI0XWmlIfzyVy0iRH2GkAVNqYIZQwMeNhr4drTOUNo; the demo leaves LIVE_CFG null) ---- */
 const LIVE_CFG = 'https://ksdxhqyusaylfpyeecbv.supabase.co'.startsWith('http') ? {
   url: 'https://ksdxhqyusaylfpyeecbv.supabase.co', key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtzZHhocXl1c2F5bGZweWVlY2J2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1NTE1NDgsImV4cCI6MjEwNDEyNzU0OH0.6HI0XWmlIfzyVy0iRH2GkAVNqYIZQwMeNhr4drTOUNo', appKey: 'education', appName: 'delcEDUCATION', suffix: 'EDUCATION', table: 'edu_records', hubUrl: 'https://delcdata.github.io/DELCAppsHub/',
-  kinds: ['rooms', 'students', 'adults', 'sessions', 'issues', 'schedule', 'oldrooms', 'supplies'],
+  kinds: ['rooms', 'families', 'students', 'adults', 'sessions', 'issues', 'schedule', 'oldrooms', 'supplies'],
   keyOf: (k, x) => x.id || ((x.date || '') + '|' + (x.room_id || '')),
   keep: () => ({church: (DB && DB.church) || {}, v: 3}),
   linkHelp: 'Ask the Christian Education director to add your DELC Apps username to your record under <b>Adults &amp; clearances</b>.',
@@ -1470,6 +1470,209 @@ document.addEventListener('click', e => {
   .plight img{width:min(92vw,480px);height:auto;border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,.5)}
   .plight-x{position:absolute;top:12px;right:14px;width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.15);color:#fff;font-size:28px;cursor:pointer}
   .plight-cap{color:#fff;margin-top:12px;font-weight:700;font-size:16px}`; document.head.appendChild(st); })();
+/* ======== Families (Derek, 2026-11-18): siblings share a family; parents/guardians and pickups are kept once per family.
+   A child's guardians/pickups stay filled in (family + "this child only" in k.own) so check-out, printouts and search keep working.
+   The database link (edu_family_sync) puts light child records and parent links into delcPEOPLE. ======== */
+const fams = () => (DB.families = DB.families || []);
+const fam = id => fams().find(f => f.id === id);
+const famIds = k => ((k && k.family_ids) || []).filter(id => fam(id));
+const famsOf = k => famIds(k).map(fam);
+const famKids = f => DB.students.filter(k => (k.family_ids || []).includes(f.id));
+const siblingsOf = k => { const ids = famIds(k); return ids.length ? DB.students.filter(s => s.id !== k.id && s.active !== false && (s.family_ids || []).some(id => ids.includes(id))) : []; };
+const famDigits = v => String(v || '').replace(/\D/g, '').slice(-10);
+const nmKey = v => String(v || '').toLowerCase().replace(/[^a-z ]/g, ' ').replace(/\s+/g, ' ').trim();
+const sameG = (a, b) => (nmKey(a.name) && nmKey(a.name) === nmKey(b.name)) || (!!a.email && !!b.email && a.email.trim().toLowerCase() === b.email.trim().toLowerCase());
+const famDedupe = L => { const out = []; (L || []).forEach(g => { if (!g || !String(g.name || '').trim()) return; const e = out.find(o => sameG(o, g)); if (e) ['rel', 'phone', 'email'].forEach(f => { if (!e[f] && g[f]) e[f] = g[f]; }); else out.push({name: g.name, rel: g.rel || '', phone: g.phone || '', email: g.email || ''}); }); return out; };
+const famMinus = (L, F) => (L || []).filter(g => g && g.name && !(F || []).some(o => sameG(o, g)));
+const famKidVisible = k => isDirector() || myRooms().some(r => inClass(k, r.id));
+function famMat(k) {
+  const F = famsOf(k); k.family_ids = F.map(f => f.id); if (!F.length) { delete k.own; return k; }
+  const own = k.own || {guardians: [], pickups: []};
+  k.guardians = famDedupe([...F.flatMap(f => f.guardians || []), ...(own.guardians || [])]);
+  k.pickups = famDedupe([...F.flatMap(f => f.pickups || []), ...(own.pickups || [])]).map(({name, rel, phone}) => ({name, rel, phone}));
+  return k;
+}
+/* a child joining a family: anyone not already in the family is kept as "this child only", so nothing is lost */
+function famJoin(k, fid) {
+  const f = fam(fid); if (!f || (k.family_ids || []).includes(fid) && famIds(k).includes(fid)) { famMat(k); return; }
+  if (!famIds(k).length) k.own = {guardians: famMinus(k.guardians, f.guardians), pickups: famMinus(k.pickups, [...(f.pickups || []), ...(f.guardians || [])])};
+  k.family_ids = [...new Set([...famIds(k), fid])]; famMat(k);
+}
+function famLeave(k, fid) {
+  const G = (k.guardians || []).map(g => ({...g})), P = (k.pickups || []).map(g => ({...g}));
+  k.family_ids = famIds(k).filter(x => x !== fid);
+  if (!k.family_ids.length) { k.guardians = G; k.pickups = P; delete k.own; } else famMat(k);
+}
+const famLast = kids => { const c = {}; kids.forEach(k => { const l = (k.last || '').trim(); if (l) c[l] = (c[l] || 0) + 1; }); return Object.keys(c).sort((a, b) => c[b] - c[a])[0] || (kids[0] ? kids[0].first : 'New'); };
+
+/* ---- suggestions: children with no family yet who share a parent's phone, email or full name ---- */
+function famSuggest() {
+  const L = DB.students.filter(k => k.active !== false && !k.visitor && !famIds(k).length);
+  const par = {}; L.forEach(k => { par[k.id] = k.id; }); const find = x => (par[x] === x ? x : (par[x] = find(par[x])));
+  const seen = {}; const byId = Object.fromEntries(L.map(k => [k.id, k]));
+  L.forEach(k => (k.guardians || []).forEach(g => {
+    const keys = [famDigits(g.phone).length >= 7 ? 'ph:' + famDigits(g.phone) : '', g.email ? 'em:' + g.email.trim().toLowerCase() : '', nmKey(g.name).includes(' ') ? 'nm:' + nmKey(g.name) : ''].filter(Boolean);
+    keys.forEach(key => { (seen[key] = seen[key] || []).forEach(oid => { const o = byId[oid]; if ((k.fam_skip || []).includes(oid) || (o.fam_skip || []).includes(k.id)) return; par[find(oid)] = find(k.id); }); if (!seen[key].includes(k.id)) seen[key].push(k.id); });
+  }));
+  const groups = {}; L.forEach(k => { (groups[find(k.id)] = groups[find(k.id)] || []).push(k); });
+  const out = Object.values(groups).filter(g => g.length > 1).map(kids => {
+    const all = kids.flatMap(k => (k.guardians || []).map(g => ({g, k: k.id})));
+    const shared = famDedupe(all.filter(({g}) => all.some(o => o.k !== all.find(x => x.g === g).k && (sameG(o.g, g) || (famDigits(g.phone).length >= 7 && famDigits(o.g.phone) === famDigits(g.phone))))).map(x => x.g));
+    return {kids: kids.sort((a, b) => (a.dob || '').localeCompare(b.dob || '')), shared};
+  });
+  /* children who may belong to a family that already exists */
+  const join = [];
+  L.forEach(k => fams().forEach(f => { if ((k.fam_skip || []).includes('f:' + f.id)) return; const hit = (k.guardians || []).find(g => (f.guardians || []).some(o => sameG(o, g) || (famDigits(g.phone).length >= 7 && famDigits(o.phone) === famDigits(g.phone)))); if (hit) join.push({k, f, hit}); }));
+  return {groups: out, join, loose: L.filter(k => !out.some(g => g.kids.includes(k)) && !join.some(j => j.k === k))};
+}
+
+/* ---- Families tab (director) ---- */
+function viewFamilies() {
+  const F = fams().slice().sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  const sg = famSuggest();
+  const kidChip = k => `<button class="chipbtn" data-act="profile" data-id="${k.id}" style="font-weight:600"><span class="dot" style="background:${room(k.room_id).color}"></span>${esc(kname(k))} <span class="tiny muted">${esc(room(k.room_id).name)}</span></button>`;
+  const gLine = g => `<div class="list-item"><div><b>${esc(g.name)}</b> <span class="tiny muted">${esc(g.rel || '')}</span></div><div class="tiny" style="user-select:all">${esc(g.phone || '')}${g.email ? ' · ' + esc(g.email) : ''}</div></div>`;
+  const sugg = sg.groups.map((g, i) => `<div class="card" style="border-left:4px solid var(--delc-green)"><div class="sec"><h2 style="font-size:16px">${esc(famLast(g.kids))} family?</h2><span class="chip info">${g.kids.length} children</span></div>
+      <div class="rooms" style="margin-bottom:8px">${g.kids.map(kidChip).join('')}</div>
+      ${g.shared.length ? `<div class="tiny muted" style="margin-bottom:8px">Same parent on each: ${g.shared.map(x => '<b>' + esc(x.name) + '</b>').join(', ')}</div>` : ''}
+      <div class="row" style="gap:6px"><button class="btn sm pri" data-act="famFromSugg" data-v="${g.kids.map(k => k.id).join(',')}">✓ Make a family</button><button class="btn sm ghost" data-act="famNotRelated" data-v="${g.kids.map(k => k.id).join(',')}">Not related</button></div></div>`).join('');
+  const joins = sg.join.map(j => `<div class="list-item"><div>${kidChip(j.k)} <span class="small">may belong to <b>${esc(j.f.name)}</b> <span class="tiny muted">(${esc(j.hit.name)})</span></span></div><div class="row" style="gap:6px"><button class="btn sm pri" data-act="famJoinSugg" data-id="${j.k.id}" data-v="${j.f.id}">Add to family</button><button class="btn sm ghost" data-act="famJoinNo" data-id="${j.k.id}" data-v="${j.f.id}">No</button></div></div>`).join('');
+  const famCard = f => { const K = famKids(f).sort((a, b) => (a.dob || '').localeCompare(b.dob || '')); return `<div class="card"><div class="sec"><h2 style="font-size:16px">${esc(f.name || 'Family')}</h2><button class="btn sm" data-act="famEdit" data-id="${f.id}">Edit</button></div>
+      <div class="rooms" style="margin-bottom:8px">${K.map(kidChip).join('') || '<span class="small muted">No children yet.</span>'}</div>
+      ${(f.guardians || []).map(gLine).join('') || '<div class="small muted">No parents listed.</div>'}
+      ${(f.pickups || []).length ? `<div class="tiny muted" style="margin-top:6px">Also picks up: ${f.pickups.map(p => esc(p.name) + (p.rel ? ' (' + esc(p.rel) + ')' : '')).join(', ')}</div>` : ''}
+      ${f.phone || f.address ? `<div class="tiny muted" style="margin-top:4px">${[f.phone, f.address].filter(Boolean).map(esc).join(' · ')}</div>` : ''}</div>`; };
+  return `<div class="day"><h1>Families</h1><span class="muted">${F.length} famil${F.length === 1 ? 'y' : 'ies'}</span><span style="flex:1"></span><button class="btn gold" data-act="famNew">+ New family</button></div>
+    <div class="notice info" style="margin-bottom:12px">Brothers and sisters are linked by being in the same family. Parents and pickup people are entered once for the whole family. Children and parents also show in delcPEOPLE (allergies, medical notes and pickups stay here).</div>
+    ${sg.groups.length || sg.join.length ? `<h2 style="font-size:17px;margin:4px 0 8px">Suggested from what's already entered</h2><div class="tiny muted" style="margin:-4px 0 10px">Children who share a parent's phone, email or name. Check each one — nothing is linked until you confirm.</div>
+      <div class="grid2" style="margin-bottom:12px">${sugg}</div>${joins ? `<div class="card" style="margin-bottom:14px">${joins}</div>` : ''}` : ''}
+    <div class="grid2" style="margin-bottom:14px">${F.map(famCard).join('') || '<div class="card empty">No families yet.</div>'}</div>
+    ${sg.loose.length ? `<section class="card"><div class="sec"><h2>No family yet</h2><span class="chip">${sg.loose.length}</span></div><div class="tiny muted" style="margin-bottom:8px">Tap a child to start a family for them (an only child can be a family too).</div><div class="rooms">${sg.loose.sort((a, b) => a.last.localeCompare(b.last)).map(k => `<button class="chipbtn" data-act="famNewFor" data-id="${k.id}" style="font-weight:600"><span class="dot" style="background:${room(k.room_id).color}"></span>${esc(kname(k))}</button>`).join('')}</div></section>` : ''}`;
+}
+
+/* ---- family window ---- */
+function famModal(f, preKids) {
+  const isNew = !f; const kids0 = (preKids || []).map(kid).filter(Boolean);
+  f = f ? JSON.parse(JSON.stringify(f)) : {id: 'f' + uid(), name: kids0.length ? famLast(kids0) + ' family' : '', guardians: famDedupe(kids0.flatMap(k => k.guardians || [])), pickups: [], phone: '', address: '', notes: ''};
+  if (isNew && kids0.length) { f.pickups = famMinus(famDedupe(kids0.flatMap(k => k.pickups || [])), f.guardians).map(({name, rel, phone}) => ({name, rel, phone})); f.phone = (f.guardians.find(g => g.phone) || {}).phone || ''; }
+  if (!f.guardians.length) f.guardians = [{name: '', rel: 'Parent', phone: '', email: ''}];
+  const members = new Set(isNew ? kids0.map(k => k.id) : famKids(f).map(k => k.id));
+  S.modal = {fm: f, isNew, members, html: () => { const x = S.modal.fm; const M = S.modal.members;
+    const rows = (arr, cls, title, withEmail) => `<div class="lbl" style="margin-top:6px">${title}</div>${arr.map((g, i) => `<div class="${withEmail ? 'grid4' : 'grid3'} famrow"><input class="inp ${cls}" data-i="${i}" data-k="name" value="${esc(g.name)}" placeholder="Name" aria-label="${title} name"><input class="inp ${cls}" data-i="${i}" data-k="rel" value="${esc(g.rel || '')}" placeholder="${cls === 'fg' ? 'Mom, Dad, Guardian…' : 'Grandma, Aunt…'}" aria-label="Relationship"><input class="inp ${cls}" data-i="${i}" data-k="phone" value="${esc(g.phone || '')}" placeholder="Phone" inputmode="tel" aria-label="Phone">${withEmail ? `<input class="inp ${cls}" data-i="${i}" data-k="email" value="${esc(g.email || '')}" placeholder="Email" inputmode="email" aria-label="Email">` : ''}</div>`).join('')}<button class="btn sm" data-act="famRow" data-v="${cls}">+ Add</button>`;
+    const all = DB.students.filter(k => k.active !== false || M.has(k.id)).sort((a, b) => (M.has(b.id) - M.has(a.id)) || (!famIds(a).length ? 0 : 1) - (!famIds(b).length ? 0 : 1) || a.last.localeCompare(b.last));
+    return `${head(isNew ? 'New family' : 'Edit ' + esc(x.name || 'family'))}<div class="stack">
+      <div class="grid2"><label class="f" for="fm_n">Family name<input id="fm_n" value="${esc(x.name)}" placeholder="e.g. Smith family"></label><label class="f" for="fm_p">Home phone<input id="fm_p" value="${esc(x.phone || '')}" inputmode="tel"></label></div>
+      <label class="f" for="fm_a">Address <span class="tiny muted">(optional)</span><input id="fm_a" value="${esc(x.address || '')}"></label>
+      ${rows(x.guardians, 'fg', 'Parents / guardians', true)}
+      ${rows(x.pickups, 'fp', 'Also allowed to pick up', false)}
+      <div class="tiny muted">Parents and guardians can always pick up.</div>
+      <div class="f"><span>Children in this family</span><div class="rooms">${all.map(k => { const other = famsOf(k).filter(o => o.id !== x.id); return `<label class="chipbtn" style="font-weight:600"><input type="checkbox" class="fm_kid" value="${k.id}" ${M.has(k.id) ? 'checked' : ''}> <span class="dot" style="background:${room(k.room_id).color}"></span>${esc(kname(k))}${other.length ? ` <span class="tiny muted">· ${esc(other.map(o => o.name).join(', '))}</span>` : ''}</label>`; }).join('')}</div>
+        <div class="tiny muted">A child can be in two families (for example, two households).</div></div>
+      <label class="f" for="fm_nt">Notes <span class="tiny muted">(director only)</span><textarea id="fm_nt" rows="2">${esc(x.notes || '')}</textarea></label></div>
+      ${foot(isNew ? 'Create family' : 'Save', !isNew ? '<button class="btn danger" data-act="famDel">Delete family</button>' : '')}`; },
+    onSave: () => { famGrab(); const x = S.modal.fm; x.guardians = famDedupe(x.guardians); x.pickups = famMinus(famDedupe(x.pickups), x.guardians).map(({name, rel, phone}) => ({name, rel, phone}));
+      const want = new Set($$('.fm_kid:checked').map(c => c.value));
+      if (!x.name) { const K = [...want].map(kid).filter(Boolean); x.name = K.length ? famLast(K) + ' family' : ''; }
+      if (!x.name) { toast('Give the family a name'); return false; }
+      if (!want.size && !x.guardians.length) { toast('Add a parent or a child'); return false; }
+      const i = fams().findIndex(o => o.id === x.id); if (i >= 0) fams()[i] = x; else fams().push(x);
+      DB.students.forEach(k => { const has = famIds(k).includes(x.id); if (want.has(k.id) && !has) famJoin(k, x.id); else if (!want.has(k.id) && has) famLeave(k, x.id); else if (has) famMat(k); });
+      toast(S.modal.isNew ? 'Family created' : 'Saved'); return true; }};
+  renderModal();
+}
+function famGrab() { const x = S.modal.fm; Object.assign(x, {name: val('fm_n'), phone: val('fm_p'), address: val('fm_a'), notes: val('fm_nt')});
+  S.modal.members = new Set($$('.fm_kid:checked').map(c => c.value));
+  [['fg', 'guardians'], ['fp', 'pickups']].forEach(([c, k]) => $$('.' + c).forEach(el => { const r = x[k][+el.dataset.i]; if (r) r[el.dataset.k] = el.value.trim(); })); }
+
+Object.assign(A, {
+  famNew: () => famModal(null, []),
+  famNewFor: d => famModal(null, [d.id]),
+  famEdit: d => famModal(fam(d.id)),
+  famFromSugg: d => famModal(null, d.v.split(',')),
+  famRow: d => { famGrab(); const x = S.modal.fm; (d.v === 'fg' ? x.guardians : x.pickups).push(d.v === 'fg' ? {name: '', rel: '', phone: '', email: ''} : {name: '', rel: '', phone: ''}); renderModal(); },
+  famDel: () => { const x = S.modal.fm; const n = famKids(x).length; if (!confirm(`Delete ${x.name || 'this family'}?${n ? ` The ${n} child${n === 1 ? '' : 'ren'} keep their parents and pickups on their own profiles.` : ''}`)) return;
+    DB.students.forEach(k => { if (famIds(k).includes(x.id)) famLeave(k, x.id); }); DB.families = fams().filter(o => o.id !== x.id); persist(); closeModal(); render(); toast('Family deleted'); },
+  famNotRelated: d => { const ids = d.v.split(','); ids.forEach(id => { const k = kid(id); if (k) k.fam_skip = [...new Set([...(k.fam_skip || []), ...ids.filter(o => o !== id)])]; }); persist(); render(); toast('Got it — they won’t be suggested together'); },
+  famJoinSugg: d => { const k = kid(d.id); if (!k) return; famJoin(k, d.v); persist(); render(); toast(`${k.first} added to ${(fam(d.v) || {}).name || 'the family'}`); },
+  famJoinNo: d => { const k = kid(d.id); if (!k) return; k.fam_skip = [...new Set([...(k.fam_skip || []), 'f:' + d.v])]; persist(); render(); },
+  sibIn: d => { const k = kid(d.id); if (!k) return; const L = sibsToCheckIn(k); L.forEach(({s, rid}) => { const ses = ensureSession(S.date, rid); if (!ses.att[s.id] || !ses.att[s.id].in) ses.att[s.id] = {in: nowT(), by: (s.guardians[0] || {}).name || ''}; });
+    persist(); render(); toast(L.length ? `Checked in ${L.map(x => x.s.first).join(' and ')} in their own class${L.length > 1 ? 'es' : ''}` : 'Already checked in'); }
+});
+
+/* brothers/sisters in other Sunday classes today who aren't checked in yet */
+function sibsToCheckIn(k) {
+  if (isWeeknight(room(S.room))) return [];
+  return siblingsOf(k).filter(s => !s.visitor && DB.rooms.some(r => r.id === s.room_id) && !isWeeknight(room(s.room_id))).map(s => { const p = planFor(S.date, s.room_id); return {s, rid: p.merge_into || s.room_id, p}; })
+    .filter(({s, rid, p}) => !p.cancelled && rid !== S.room && !((session(S.date, rid) || {att: {}}).att[s.id] || {}).in);
+}
+
+/* tab + routing (after Student profiles, director only) */
+const _renderTabsF = renderTabs;
+renderTabs = function () { const keep = S.tab; if (keep === 'families') S.tab = 'students'; _renderTabsF(); S.tab = keep; if (!isDirector()) { if (keep === 'families') S.tab = 'students'; return; }
+  const t = $('#tabs'); if (!t || t.querySelector('[data-v="families"]')) return; const n = famSuggest().groups.length;
+  const btn = `<button class="${S.tab === 'families' ? 'on' : ''}" data-act="tab" data-v="families">Families${n ? ` <span class="chip info" style="margin-left:4px">${n}</span>` : ''}</button>`;
+  const st = t.querySelector('[data-v="students"]'); if (st) st.insertAdjacentHTML('afterend', btn); else t.insertAdjacentHTML('beforeend', btn);
+  if (S.tab === 'families') t.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === 'families')); };
+const _renderF = render;
+render = function () { if (S.tab !== 'families' || S.student || !isDirector()) { if (S.tab === 'families' && !isDirector()) S.tab = 'students'; return _renderF(); }
+  const keep = S.tab; S.tab = 'students'; _renderF(); S.tab = keep; $('#tabs').innerHTML = ''; renderTabs(); $('#app').innerHTML = viewFamilies(); saveUi(); renderModal(); };
+
+/* profile: family name, edit button, brothers and sisters */
+const _viewProfileF = viewProfile;
+viewProfile = function (k) { let h = _viewProfileF(k); if (!k) return h; const F = famsOf(k); const can = isDirector();
+  const sibs = siblingsOf(k).sort((a, b) => (a.dob || '').localeCompare(b.dob || ''));
+  const top = F.length ? `<div style="margin:-4px 0 10px">${F.map(f => `<div class="row" style="gap:6px;align-items:center"><span class="chip info">👨‍👩‍👧 ${esc(f.name)}</span>${can ? `<button class="btn sm ghost" data-act="famEdit" data-id="${f.id}">Edit family</button>` : ''}</div>`).join('')}</div>`
+    : isDirector() ? `<div class="tiny muted" style="margin:-4px 0 10px">Not in a family yet. <button class="btn sm ghost" data-act="famNewFor" data-id="${k.id}" style="text-decoration:underline;padding:0 4px">Start a family</button></div>` : '';
+  const sibBox = sibs.length ? `<div class="lbl" style="margin:12px 0 4px">Brothers &amp; sisters</div>${sibs.map(s => `<div class="list-item"><div>${famKidVisible(s) ? `<button class="linkbtn" data-act="profile" data-id="${s.id}" style="font-weight:700">${esc(kname(s))}</button>` : `<b>${esc(kname(s))}</b>`} <span class="tiny muted">${esc(s.grade || '')}${s.dob ? ' · age ' + ageOf(s.dob) : ''}</span></div><span class="chip" style="color:${room(s.room_id).color}">${esc(room(s.room_id).name)}</span></div>`).join('')}` : '';
+  return h.replace(/(<section class="card"><div class="sec"><h2>Family &amp; pickup<\/h2><\/div>)([\s\S]*?)(<\/section>)/, (m, a, body, c) => a + top + body + sibBox + c); };
+
+/* student window: pick a family; with a family, the parent/pickup rows are only the extras for this one child */
+const _studentModalF = studentModal;
+studentModal = function (k) { _studentModalF(k); const m = S.modal; if (!m || !m.k) return; const x0 = m.k; const inFam = famIds(x0).length > 0; m.famStart = famIds(x0)[0] || '';
+  if (inFam) { const own = x0.own || {guardians: [], pickups: []}; x0.guardians = (own.guardians || []).map(g => ({...g})); x0.pickups = (own.pickups || []).map(g => ({...g})); }
+  const html = m.html;
+  m.html = () => { const x = S.modal.k; const F = famsOf(x); const sel = S.modal.famPick !== undefined ? S.modal.famPick : S.modal.famStart;
+    const sum = F.length ? `<div class="notice info" style="display:block;margin-top:6px">${F.map(f => `<b>${esc(f.name)}</b>: ${(f.guardians || []).map(g => esc(g.name) + (g.rel ? ' (' + esc(g.rel) + ')' : '')).join(', ') || 'no parents listed'}${(f.pickups || []).length ? ' · also picks up: ' + f.pickups.map(p => esc(p.name)).join(', ') : ''}`).join('<br>')}<div class="tiny muted" style="margin-top:4px">Change the family's parents and pickups with <b>Edit family</b> on the profile — it updates every child in the family.</div></div>` : '';
+    const box = `<div class="f" style="margin-top:6px"><span>Family <span class="tiny muted">(brothers and sisters share one)</span></span><select id="s_fam">${`<option value="">— No family —</option>` + fams().slice().sort((a, b) => a.name.localeCompare(b.name)).map(f => `<option value="${f.id}" ${f.id === sel ? 'selected' : ''}>${esc(f.name)} (${famKids(f).filter(s => s.id !== x.id).length ? famKids(f).filter(s => s.id !== x.id).map(s => esc(s.first)).join(', ') : 'no other children'})</option>`).join('') + `<option value="__new" ${sel === '__new' ? 'selected' : ''}>+ Start a new family for ${esc(x.first || 'this child')}</option>`}</select></div>${F.length && sel === S.modal.famStart ? sum : ''}`;
+    let out = html().replace(/<div class="lbl" style="margin-top:6px">Parents \/ guardians<\/div>/, box + `<div class="lbl" style="margin-top:6px">${F.length && sel === S.modal.famStart ? 'Also for this child only — parents / guardians' : 'Parents / guardians'}</div>`);
+    if (F.length && sel === S.modal.famStart) out = out.replace(/<div class="lbl" style="margin-top:6px">Allowed to pick up<\/div>/, '<div class="lbl" style="margin-top:6px">Also for this child only — allowed to pick up</div>');
+    return out; };
+  const save = m.onSave;
+  m.onSave = () => { const pick = $('#s_fam') ? $('#s_fam').value : S.modal.famStart; const r = save(); if (r === false) return false; const x = DB.students.find(s => s.id === m.k.id); if (!x) return r;
+    if (inFam && pick === m.famStart) { x.own = {guardians: x.guardians, pickups: x.pickups}; famMat(x); }
+    else if (inFam) { const keep = famIds(x).filter(id => id !== m.famStart); x.family_ids = []; delete x.own; keep.forEach(id => famJoin(x, id)); }  /* the rows now hold the full lists */
+    const cur = famIds(x)[0] || '';
+    if (pick === '__new') { const f = {id: 'f' + uid(), name: (x.last || x.first) + ' family', guardians: famDedupe(x.guardians), pickups: famMinus(famDedupe(x.pickups), x.guardians).map(({name, rel, phone}) => ({name, rel, phone})), phone: ((x.guardians || []).find(g => g.phone) || {}).phone || '', address: '', notes: ''}; fams().push(f); if (cur) famLeave(x, cur); famJoin(x, f.id); }
+    else if (pick !== cur) { if (cur) famLeave(x, cur); if (pick) famJoin(x, pick); }
+    return r; };
+  renderModal();
+};
+document.addEventListener('change', e => { if (!(e.target && e.target.id === 's_fam' && S.modal && S.modal.k)) return; const m = S.modal; grabStudent();
+  const was = m.famPick !== undefined ? m.famPick : m.famStart, now = e.target.value, f0 = fam(m.famStart);
+  if (f0 && was === m.famStart && now !== m.famStart) { m.k.guardians = famDedupe([...(f0.guardians || []), ...m.k.guardians]); m.k.pickups = famDedupe([...(f0.pickups || []), ...m.k.pickups]).map(({name, rel, phone}) => ({name, rel, phone})); }
+  else if (f0 && was !== m.famStart && now === m.famStart) { m.k.guardians = famMinus(m.k.guardians, f0.guardians); m.k.pickups = famMinus(m.k.pickups, [...(f0.pickups || []), ...(f0.guardians || [])]); }
+  m.famPick = now; renderModal(); });
+/* keep "Add" rows working in the student window when the family pick changed */
+const _addPersonF = A.addPerson; A.addPerson = d => { const p = $('#s_fam'); if (p && S.modal) S.modal.famPick = p.value; _addPersonF(d); };
+
+/* Sunday: after a child is checked in, one tap checks in brothers and sisters in their own classes */
+const _viewTodayF = viewToday;
+viewToday = function () { let h = _viewTodayF(); const s = session(S.date, S.room); if (!s) return h;
+  Object.keys(s.att || {}).forEach(id => { const a = s.att[id]; if (!a || !a.in || a.out) return; const k = kid(id); if (!k) return; const L = sibsToCheckIn(k); if (!L.length) return;
+    const btn = `<button class="btn sm ghost" data-act="sibIn" data-id="${k.id}" title="Check in ${esc(L.map(x => kname(x.s)).join(', '))} in their own class">+ ${esc(L.map(x => x.s.first).join(' & '))}</button>`;
+    h = h.replace(`<button class="btn sm" data-act="checkout" data-id="${k.id}">`, btn + `<button class="btn sm" data-act="checkout" data-id="${k.id}">`); });
+  return h; };
+
+/* student list: family name under the child, and searchable */
+const _viewStudentsF = viewStudents;
+viewStudents = function () { let h = _viewStudentsF(); DB.students.forEach(k => { const F = famsOf(k); if (!F.length) return; const sib = siblingsOf(k).length;
+    h = h.replace(new RegExp(`(<tr class="click" data-act="profile" data-id="${k.id}">[\\s\\S]*?<div class="tiny muted">)`), `$1👨‍👩‍👧 ${esc(F.map(f => f.name).join(', '))}${sib ? ' · ' + sib + ' sibling' + (sib === 1 ? '' : 's') : ''} · `); });
+  return h; };
+
+(function () { const st = document.createElement('style'); st.textContent = `.grid4{display:grid;grid-template-columns:1.3fr 1fr 1fr 1.3fr;gap:8px}.famrow{margin-bottom:6px}.linkbtn{background:none;border:0;padding:0;color:var(--navy);cursor:pointer;font:inherit;text-decoration:underline}
+  @media (max-width:640px){.grid4{grid-template-columns:1fr 1fr}}`; document.head.appendChild(st); })();
+if (!LIVE_CFG || /[?&]demo\b/.test(location.search)) { try { render(); } catch (_) {} }
+
 </script>
 
 </body>
