@@ -1673,6 +1673,61 @@ viewStudents = function () { let h = _viewStudentsF(); DB.students.forEach(k => 
   @media (max-width:640px){.grid4{grid-template-columns:1fr 1fr}}`; document.head.appendChild(st); })();
 if (!LIVE_CFG || /[?&]demo\b/.test(location.search)) { try { render(); } catch (_) {} }
 
+/* ======== Add a Kid's Korner kid from another class (Derek, 2026-11-20) ========
+   Any teacher can put a child from another class on their roster: just for this day (session.guests) or every week (k.also).
+   Checking a guest in here moves them out of a class they're still checked into today. */
+const gWhere = (k, date) => DB.sessions.filter(x => x.date === date && x.room_id !== S.room && x.att && x.att[k.id] && x.att[k.id].in && !x.att[k.id].out).map(x => x.room_id);
+function guestModal() {
+  const rid = S.room; const r = room(rid); const s0 = session(S.date, rid) || {visitors: [], guests: []};
+  const onList = k => inClass(k, rid) || (s0.visitors || []).includes(k.id) || (s0.guests || []).includes(k.id);
+  S.modal = {q: '', pick: new Set(), mode: 'today', html: () => { const m = S.modal; const q = m.q.toLowerCase().trim();
+    const L = DB.students.filter(k => k.active !== false && !onList(k) && (!q || kname(k).toLowerCase().includes(q))).sort((a, b) => a.first.localeCompare(b.first));
+    const groups = DB.rooms.filter(x => x.id !== rid).map(x => ({x, kids: L.filter(k => k.room_id === x.id)})).filter(g => g.kids.length);
+    return `${head('Add a Kid’s Korner kid')}<div class="stack">
+      <div class="tiny muted" style="margin-top:-6px">Bring a child from another class into <b>${esc(r.name)}</b> — for example, when a child needs to be with a brother or sister, or a class is short-handed.</div>
+      <input class="inp" id="g_q" placeholder="Search by name" value="${esc(m.q)}" data-inp="gq" autocomplete="off">
+      <div class="glist">${groups.map(g => `<div class="lbl" style="margin:8px 0 4px;display:flex;align-items:center;gap:6px"><span class="dot" style="background:${g.x.color}"></span>${esc(g.x.name)}</div>${g.kids.map(k => { const w = gWhere(k, S.date); return `<label class="list-item gk" style="cursor:pointer"><span class="row" style="gap:10px"><input type="checkbox" class="g_k" value="${k.id}" ${m.pick.has(k.id) ? 'checked' : ''}><span class="av sm" style="background:${g.x.color}">${esc(initials(k))}</span><span><b>${esc(kname(k))}</b><div class="tiny muted">${k.grade ? esc(k.grade) + ' · ' : ''}${k.dob ? 'age ' + ageOf(k.dob) : ''}${w.length ? ` · <span style="color:var(--ok)">checked in to ${esc(room(w[0]).name)} now</span>` : ''}</div></span></span>${k.allergies ? `<span class="chip allergy">⚠ ${esc(k.allergies.split('—')[0].trim())}</span>` : ''}</label>`; }).join('')}`).join('') || `<div class="muted small" style="padding:10px 0">${q ? 'No children match “' + esc(m.q) + '”.' : 'Every child is already on this list.'} A child who’s new to church? Use <b>+ Child visitor</b>.</div>`}</div>
+      <div class="f"><span>How long?</span><div class="seg">
+        <label class="segopt ${m.mode === 'today' ? 'on' : ''}"><input type="radio" name="g_mode" value="today" ${m.mode === 'today' ? 'checked' : ''}><b>Just today</b><span class="tiny muted">${esc(fmt(S.date, {weekday: 'short', month: 'short', day: 'numeric'}))} only</span></label>
+        <label class="segopt ${m.mode === 'always' ? 'on' : ''}"><input type="radio" name="g_mode" value="always" ${m.mode === 'always' ? 'checked' : ''}><b>Every week</b><span class="tiny muted">Also comes to ${esc(r.name)}</span></label></div></div>
+      <div class="tiny muted">They stay in their own class too. If a child is checked in somewhere else, checking them in here moves them.</div></div>
+      ${foot(m.pick.size ? `Add ${m.pick.size} to roster` : 'Add to roster')}`; },
+    onSave: () => { gGrab(); const m = S.modal; if (!m.pick.size) { toast('Pick at least one child'); return false; }
+      const s = ensureSession(S.date, rid); const names = [];
+      m.pick.forEach(id => { const k = kid(id); if (!k) return; names.push(k.first);
+        if (m.mode === 'always') k.also = [...new Set([...(k.also || []), rid])]; else s.guests = [...new Set([...(s.guests || []), id])]; });
+      toast(`${names.join(', ')} added to ${r.name}${m.mode === 'today' ? ' for today' : ''}`); return true; }, focus: false};
+  renderModal(); setTimeout(() => { const e = $('#g_q'); if (e) e.focus(); }, 30);
+}
+function gGrab() { const m = S.modal; if (!m || !m.pick) return; $$('.g_k').forEach(c => { if (c.checked) m.pick.add(c.value); else m.pick.delete(c.value); }); const r = $$('input[name=g_mode]').find(x => x.checked); if (r) m.mode = r.value; }
+document.addEventListener('change', e => { if (e.target && (e.target.classList.contains('g_k') || e.target.name === 'g_mode') && S.modal && S.modal.pick) { gGrab(); renderModal(); } });
+document.addEventListener('input', e => { if (e.target && e.target.id === 'g_q' && S.modal && S.modal.pick) { gGrab(); S.modal.q = e.target.value; const pos = e.target.selectionStart; renderModal(); const n = $('#g_q'); if (n) { n.focus(); n.setSelectionRange(pos, pos); } } });
+
+Object.assign(A, {
+  guestAdd: () => guestModal(),
+  guestRemove: d => { const s = session(S.date, S.room); if (!s) return; s.guests = (s.guests || []).filter(x => x !== d.id); s.visitors = (s.visitors || []).filter(x => x !== d.id || !(kid(d.id) || {}).room_id || kid(d.id).visitor); persist(); render(); toast('Removed from today’s roster'); }
+});
+/* checking a guest in here: move them out of the other class they're still in today */
+const _checkinG = A.checkin;
+A.checkin = d => { const k = kid(d.id); const moved = k ? gWhere(k, S.date) : [];
+  moved.forEach(rid => { const x = session(S.date, rid); if (x && x.att[k.id]) x.att[k.id] = {...x.att[k.id], out: nowT(), to: 'Moved to ' + room(S.room).name}; });
+  _checkinG(d); if (moved.length) toast(`${k.first} moved from ${room(moved[0]).name}`); };
+
+/* roster: guests show with "from <class> · today" and can be taken off before check-in */
+const _viewTodayG = viewToday;
+viewToday = function () { const s = session(S.date, S.room); const G = (s && s.guests) || [];
+  /* the base roster already lists anyone in session.visitors; list guests through it, then relabel them */
+  const vis0 = s ? s.visitors : null; if (s && G.length) s.visitors = [...new Set([...(s.visitors || []), ...G])];
+  let h; try { h = _viewTodayG(); } finally { if (s && G.length) s.visitors = vis0; }
+  G.forEach(id => { const k = kid(id); if (!k) return; const a = (s.att || {})[id] || {};
+    h = h.replace(new RegExp(`(<button data-act="profile" data-id="${id}">[^<]*</button>(?: <span class="chip"[^>]*>from [^<]*</span>)?) <span class="chip info">Visitor</span>`), `$1 <span class="chip guest">today only</span>`);
+    if (!a.in) h = h.replace(`<button class="btn sm pri" data-act="checkin" data-id="${id}">Check in</button>`, `<span class="row" style="gap:4px;flex-wrap:nowrap"><button class="btn sm ghost" data-act="guestRemove" data-id="${id}" title="Take off today’s roster" aria-label="Take ${esc(k.first)} off today’s roster">✕</button><button class="btn sm pri" data-act="checkin" data-id="${id}">Check in</button></span>`); });
+  return h.replace(/(<button class="btn sm gold" data-act="visitor">)/, '<button class="btn sm" data-act="guestAdd">+ Add a Kid’s Korner kid</button>$1'); };
+
+(function () { const st = document.createElement('style'); st.textContent = `.chip.guest{background:#fdf0e1;color:#9a5b13}.glist{max-height:46vh;overflow:auto;border:1px solid var(--line,#e5e7eb);border-radius:12px;padding:4px 10px}.gk{gap:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:nowrap}.gk>.row{flex-wrap:nowrap;min-width:0;align-items:center}.gk>.row>span:last-child{min-width:0}.av.sm{width:30px;height:30px;font-size:12px;border-radius:50%;display:inline-grid;place-items:center;color:#fff;font-weight:800;flex:none}
+  .seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}.segopt{display:flex;flex-direction:column;gap:2px;border:1.5px solid var(--line,#e5e7eb);border-radius:12px;padding:10px 12px;cursor:pointer}.segopt input{position:absolute;opacity:0;pointer-events:none}.segopt.on{border-color:var(--navy);background:var(--info-soft,#eef4fb)}`; document.head.appendChild(st); })();
+if (!LIVE_CFG || /[?&]demo\b/.test(location.search)) { try { render(); } catch (_) {} }
+
 </script>
 
 </body>
